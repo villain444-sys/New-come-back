@@ -1,17 +1,18 @@
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-import os, io, qrcode
+import os, io, qrcode, requests
 from flask import Flask
 from threading import Thread
 
 # BOT CONFIGURATION
-BOT_TOKEN = "8777634130:AAEfZpoDgpx5vrjhj232poiFXt2HVw1ict8"  # Token reset kiya ho toh naya yahan daalein
+BOT_TOKEN = "8777634130:AAEfZpoDgpx5vrjhj232poiFXt2HVw1ict8"
 CHANNEL_USERNAME = "villain_ott_hub"
 UPI_ID = "rishabhx07@fam"
 ADMIN_ID = 8692723368
 ADMIN_USERNAME = "ishowvillain"
 CHANNEL_LINK = "https://t.me/villain_ott_hub"
 USERS_FILE = "users.txt"
+TRUST_API_KEY = "Fam_live_d28474caad09563b9b8a2383599d6e88a979" # Aapki Nayi API Key
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask('')
@@ -43,18 +44,6 @@ PLAN_DATA = {
     "buy_youtube": ("YouTube Premium (1 Month)", 30),
     "buy_gemini": ("Gemini Advanced (18 Months)", 80)
 }
-
-def generate_dynamic_qr(upi_id, amount, name="V-Premium"):
-    upi_url = f"upi://pay?pa={upi_id}&pn={name}&am={amount}&cu=INR"
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
-    qr.add_data(upi_url)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    bio = io.BytesIO()
-    bio.name = 'qr.png'
-    img.save(bio, 'PNG')
-    bio.seek(0)
-    return bio
 
 def save_user(user_id):
     if not os.path.exists(USERS_FILE):
@@ -247,54 +236,115 @@ def handle_query(call):
         )
         bot.edit_message_text(txt, cid, mid, reply_markup=m)
 
+    # 🟢 AUTOMATIC PAYMENT GATEWAY LOGIC (TRUST GATEWAY)
     elif call.data.startswith("pay_"):
         code = call.data.replace("pay_", "")
         p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
         sel = f"{p_name} - ₹{amt}"
-        cap = (
-            f"🛒 YOUR SELECTED PLAN:\n👉 {sel}\n\n"
-            f"📲 Upar QR Code Scan Karke ₹{amt} Payment Karein\n\n"
-            f"🏦 UPI ID: {UPI_ID}\n\n"
-            f"📸 IMPORTANT STEP:\n"
-            f"Payment hone ke turant baad screenshot (photo ya file) yahan send karein! 🚀✅"
-        )
-        try:
-            qr = generate_dynamic_qr(UPI_ID, amt)
-            bot.delete_message(cid, mid)
-            msg = bot.send_photo(cid, qr, caption=cap)
-            bot.register_next_step_handler(msg, process_screenshot, sel)
-        except Exception:
-            bot.delete_message(cid, mid)
-            msg = bot.send_message(cid, cap)
-            bot.register_next_step_handler(msg, process_screenshot, sel)
 
-    elif call.data.startswith("accept_mail_"):
-        t_uid = call.data.split("_")[2]
+        bot.delete_message(cid, mid)
+        msg = bot.send_message(cid, "⏳ *Generating Secure Payment QR...*", parse_mode="Markdown")
+
+        headers = {
+            'Content-Type': 'application/json',
+            'X-API-Key': TRUST_API_KEY
+        }
+        payload = {
+            "amount": str(amt),
+            "note": f"Plan: {code}, User: {cid}"
+        }
+
         try:
-            txt = (
-                "🎉 *PAYMENT VERIFIED!* ✅\n\n"
-                "📧 *PLEASE SEND YOUR EMAIL / GMAIL ID FOR ACTIVATION*\n"
-                "*(Apni Mail ID niche type karke send karein)* 👇"
-            )
-            msg = bot.send_message(t_uid, txt, parse_mode="Markdown")
-            bot.register_next_step_handler(msg, receive_user_gmail)
-            bot.edit_message_caption(chat_id=cid, message_id=mid, caption=call.message.caption + "\n\n✅ *Status: Accepted (Waiting for user's mail)*")
+            api_res = requests.post('https://trustgateway.in/api/v1/orders/create', json=payload, headers=headers).json()
+            if api_res.get('success'):
+                order_id = api_res['data']['order_id']
+                checkout_url = "https://trustgateway.in" + api_res['data']['checkout_url']
+
+                qr = qrcode.make(checkout_url)
+                bio = io.BytesIO()
+                bio.name = 'qr.png'
+                qr.save(bio, 'PNG')
+                bio.seek(0)
+
+                cap = (
+                    f"🛒 *YOUR SELECTED PLAN:*\n👉 {sel}\n\n"
+                    f"📲 Upar QR Code Scan Karke *₹{amt}* Payment Karein\n"
+                    f"*(FamPay ya kisi bhi app se pay kar sakte hain)*\n\n"
+                    f"📸 *IMPORTANT STEP:*\n"
+                    f"Payment cut hone ke baad niche '✅ I Paid' button par click karein! 🚀"
+                )
+
+                m = InlineKeyboardMarkup(row_width=2)
+                m.add(
+                    InlineKeyboardButton("✅ I Paid", callback_data=f"chk_{order_id}_{code}"),
+                    InlineKeyboardButton("❌ Cancel", callback_data="open_products")
+                )
+
+                bot.delete_message(cid, msg.message_id)
+                bot.send_photo(cid, bio, caption=cap, reply_markup=m, parse_mode="Markdown")
+            else:
+                bot.edit_message_text("⚠️ Payment gateway error. Admin ko contact karein.", cid, msg.message_id)
         except Exception as e:
-            bot.send_message(cid, f"❌ User tak message nahi gaya: {e}")
+            bot.edit_message_text("⚠️ Server error. Thodi der baad try karein.", cid, msg.message_id)
 
+    # 🟢 AUTOMATIC PAYMENT VERIFICATION & REDIRECTION
+    elif call.data.startswith("chk_"):
+        parts = call.data.split("_")
+        order_id = parts[1]
+        code = "_".join(parts[2:]) # Restore plan code
+        p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
+
+        headers = {'X-API-Key': TRUST_API_KEY}
+        try:
+            status_url = f'https://trustgateway.in/api/v1/orders/status/{order_id}'
+            response = requests.get(status_url, headers=headers).json()
+
+            if response.get('paid') == True:
+                # Payment 100% verified automatically
+                bot.edit_message_caption("🎉 *PAYMENT VERIFIED AUTOMATICALLY!* ✅\n\nWait for the next step...", chat_id=cid, message_id=mid, parse_mode="Markdown")
+                
+                # Check agar plan "Mail" wala hai ya "ID/Pass" wala
+                is_mail_plan = ("on mail ✅" in p_name.lower()) or ("youtube" in p_name.lower())
+                
+                if is_mail_plan:
+                    # User se Mail maango (Purana System)
+                    txt = (
+                        "🎉 *PAYMENT VERIFIED!* ✅\n\n"
+                        "📧 *PLEASE SEND YOUR EMAIL / GMAIL ID FOR ACTIVATION*\n"
+                        "*(Apni Mail ID niche type karke send karein)* 👇"
+                    )
+                    msg = bot.send_message(cid, txt, parse_mode="Markdown")
+                    bot.register_next_step_handler(msg, receive_user_gmail)
+                    
+                    # Admin ko info do
+                    bot.send_message(ADMIN_ID, f"✅ *Auto-Payment Success*\nUser: `{cid}`\nPlan: {p_name}\nStatus: Waiting for user's email...", parse_mode="Markdown")
+                else:
+                    # Admin ko "Send ID/Pass" ka option do (Purana System)
+                    bot.send_message(cid, "🎉 *PAYMENT VERIFIED!* ✅\n\n⏳ Admin aapko jaldi hi ID & Password send karenge. Kripya wait karein!", parse_mode="Markdown")
+                    
+                    cap = (
+                        f"🔔 *NEW AUTO-PAYMENT VERIFIED!*\n\n"
+                        f"📦 Plan: {p_name}\n"
+                        f"👤 User ID: `{cid}`\n"
+                        f"💰 Amount: ₹{amt}\n\n"
+                        f"Action: Niche button click karke ID/Pass bhejein:"
+                    )
+                    m = InlineKeyboardMarkup()
+                    m.add(InlineKeyboardButton("🔑 Send ID/Pass", callback_data=f"reply_pass_{cid}"))
+                    bot.send_message(ADMIN_ID, cap, reply_markup=m, parse_mode="Markdown")
+
+            else:
+                bot.answer_callback_query(call.id, "❌ Payment verify nahi hui. Agar abhi pay kiya hai toh 1 minute ruk kar dobara 'I Paid' dabayein.", show_alert=True)
+                
+        except Exception as e:
+            bot.answer_callback_query(call.id, "⚠️ API Server error. Try again.", show_alert=True)
+
+    # 🟢 ADMIN POST-PAYMENT ACTIONS (SAME AS OLD CODE)
     elif call.data.startswith("reply_pass_"):
         t_uid = call.data.split("_")[2]
         msg = bot.send_message(cid, "🔑 Is user ke liye ID / Password type karke bhejo:")
         bot.register_next_step_handler(msg, send_id_to_user, t_uid)
         
-    elif call.data.startswith("reject_"):
-        t_uid = call.data.split("_")[1]
-        try:
-            bot.send_message(t_uid, "❌ *PAYMENT VERIFICATION FAILED!*\n\nAapka payment screenshot verify nahi ho paya. Kripya sahi screenshot dobara bhejein ya admin se contact karein.", parse_mode="Markdown")
-            bot.edit_message_caption(chat_id=cid, message_id=mid, caption=call.message.caption + "\n\n❌ *Status: Rejected*")
-        except Exception:
-            bot.send_message(cid, "❌ User tak message deliver nahi hua.")
-
     elif call.data.startswith("inv_sent_"):
         t_uid = call.data.split("_")[2]
         try:
@@ -312,54 +362,6 @@ def handle_query(call):
             bot.edit_message_text(f"{call.message.text}\n\n⚠️ *Status: Problem Reported to User*", cid, mid)
         except Exception:
             bot.send_message(cid, "❌ User tak message nahi gaya.")
-
-def process_screenshot(message, selected_plan):
-    uid = message.from_user.id
-    uname = message.from_user.username or "None"
-    
-    file_id = None
-    is_doc = False
-    if message.photo:
-        file_id = message.photo[-1].file_id
-    elif message.document:
-        file_id = message.document.file_id
-        is_doc = True
-    else:
-        msg = bot.send_message(message.chat.id, "⚠️ Text mat bhejo! Payment ka Screenshot bhejo (Photo ya File).")
-        bot.register_next_step_handler(msg, process_screenshot, selected_plan)
-        return
-
-    is_mail_plan = ("on mail ✅" in selected_plan.lower()) or ("youtube" in selected_plan.lower())
-    
-    cap = (
-        f"🔔 NEW PAYMENT SCREENSHOT!\n\n"
-        f"📦 Plan: {selected_plan}\n"
-        f"👤 User: @{uname} (ID: {uid})\n\n"
-        f"Action select karein:"
-    )
-    
-    m = InlineKeyboardMarkup(row_width=2)
-    if is_mail_plan:
-        m.add(
-            InlineKeyboardButton("✅ Accept", callback_data=f"accept_mail_{uid}"),
-            InlineKeyboardButton("❌ Reject", callback_data=f"reject_{uid}")
-        )
-    else:
-        m.add(
-            InlineKeyboardButton("🔑 Send ID/Pass", callback_data=f"reply_pass_{uid}"),
-            InlineKeyboardButton("❌ Reject", callback_data=f"reject_{uid}")
-        )
-    
-    try:
-        if is_doc:
-            bot.send_document(ADMIN_ID, file_id, caption=cap, reply_markup=m)
-        else:
-            bot.send_photo(ADMIN_ID, file_id, caption=cap, reply_markup=m)
-            
-        bot.send_message(message.chat.id, "✅ SCREENSHOT RECEIVED!\n\n⏳ Admin verification kar raha hai, kripya thoda wait karein!")
-    except Exception as e:
-        print(f"Error forwarding screenshot to Admin ({ADMIN_ID}): {e}")
-        bot.send_message(message.chat.id, "❌ Screenshot bhejne mein problem aayi. Make sure karein Admin ne bot ko pehle /start kiya ho!")
 
 def receive_user_gmail(message):
     uid = message.from_user.id
@@ -399,3 +401,4 @@ if __name__ == '__main__':
     bot.remove_webhook()
     print("🚀 V-Premium Bot is running smoothly...")
     bot.infinity_polling(skip_pending=True)
+        
