@@ -271,7 +271,8 @@ def handle_query(call):
 
                 cap = (
                     f"🛒 *YOUR SELECTED PLAN:*\n👉 {sel}\n\n"
-                    f"📲 Upar QR Code Scan Karein\n
+                    f"📲 Upar QR Code Scan Karein\n"
+                    f"*(Direct GPay/PhonePe/Paytm khulega)*\n\n"
                     f"⚠️ *Note:* Amount *₹{exact_amount}* hi rehne dein, warna auto-verify nahi hoga!\n\n"
                     f"📸 Payment hone ke baad niche '✅ I Paid' dabayein! 🚀"
                 )
@@ -403,3 +404,4 @@ if __name__ == '__main__':
     bot.remove_webhook()
     print("🚀 V-Premium Bot is running smoothly...")
     bot.infinity_polling(skip_pending=True)
+        
