@@ -1,4 +1,5 @@
 pyTelegramBotAPI
+Flask
 qrcode
 pillow
-flask
+requests
