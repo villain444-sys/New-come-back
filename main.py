@@ -12,7 +12,7 @@ ADMIN_ID = 8692723368
 ADMIN_USERNAME = "ishowvillain"
 CHANNEL_LINK = "https://t.me/villain_ott_hub"
 USERS_FILE = "users.txt"
-TRUST_API_KEY = "Fam_live_d28474caad09563b9b8a2383599d6e88a979" # Aapki Nayi API Key
+TRUST_API_KEY = "Fam_live_d28474caad09563b9b8a2383599d6e88a979" 
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask('')
@@ -236,14 +236,14 @@ def handle_query(call):
         )
         bot.edit_message_text(txt, cid, mid, reply_markup=m)
 
-    # 🟢 AUTOMATIC PAYMENT GATEWAY LOGIC (TRUST GATEWAY)
+    # 🟢 AUTOMATIC PAYMENT GATEWAY LOGIC (DIRECT UPI QR)
     elif call.data.startswith("pay_"):
         code = call.data.replace("pay_", "")
         p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
         sel = f"{p_name} - ₹{amt}"
 
         bot.delete_message(cid, mid)
-        msg = bot.send_message(cid, "⏳ *Generating Secure Payment QR...*", parse_mode="Markdown")
+        msg = bot.send_message(cid, "⏳ *Generating Direct UPI QR...*", parse_mode="Markdown")
 
         headers = {
             'Content-Type': 'application/json',
@@ -256,11 +256,14 @@ def handle_query(call):
 
         try:
             api_res = requests.post('https://trustgateway.in/api/v1/orders/create', json=payload, headers=headers).json()
+            
             if api_res.get('success'):
                 order_id = api_res['data']['order_id']
-                checkout_url = "https://trustgateway.in" + api_res['data']['checkout_url']
-
-                qr = qrcode.make(checkout_url)
+                exact_amount = api_res['data']['amount']
+                
+                upi_url = f"upi://pay?pa={UPI_ID}&pn=V-Premium&am={exact_amount}&cu=INR"
+                
+                qr = qrcode.make(upi_url)
                 bio = io.BytesIO()
                 bio.name = 'qr.png'
                 qr.save(bio, 'PNG')
@@ -268,10 +271,9 @@ def handle_query(call):
 
                 cap = (
                     f"🛒 *YOUR SELECTED PLAN:*\n👉 {sel}\n\n"
-                    f"📲 Upar QR Code Scan Karke *₹{amt}* Payment Karein\n"
-                    f"*(FamPay ya kisi bhi app se pay kar sakte hain)*\n\n"
-                    f"📸 *IMPORTANT STEP:*\n"
-                    f"Payment cut hone ke baad niche '✅ I Paid' button par click karein! 🚀"
+                    f"📲 Upar QR Code Scan Karein\n
+                    f"⚠️ *Note:* Amount *₹{exact_amount}* hi rehne dein, warna auto-verify nahi hoga!\n\n"
+                    f"📸 Payment hone ke baad niche '✅ I Paid' dabayein! 🚀"
                 )
 
                 m = InlineKeyboardMarkup(row_width=2)
@@ -307,7 +309,7 @@ def handle_query(call):
                 is_mail_plan = ("on mail ✅" in p_name.lower()) or ("youtube" in p_name.lower())
                 
                 if is_mail_plan:
-                    # User se Mail maango (Purana System)
+                    # User se Mail maango
                     txt = (
                         "🎉 *PAYMENT VERIFIED!* ✅\n\n"
                         "📧 *PLEASE SEND YOUR EMAIL / GMAIL ID FOR ACTIVATION*\n"
@@ -319,7 +321,7 @@ def handle_query(call):
                     # Admin ko info do
                     bot.send_message(ADMIN_ID, f"✅ *Auto-Payment Success*\nUser: `{cid}`\nPlan: {p_name}\nStatus: Waiting for user's email...", parse_mode="Markdown")
                 else:
-                    # Admin ko "Send ID/Pass" ka option do (Purana System)
+                    # Admin ko "Send ID/Pass" ka option do
                     bot.send_message(cid, "🎉 *PAYMENT VERIFIED!* ✅\n\n⏳ Admin aapko jaldi hi ID & Password send karenge. Kripya wait karein!", parse_mode="Markdown")
                     
                     cap = (
@@ -339,7 +341,7 @@ def handle_query(call):
         except Exception as e:
             bot.answer_callback_query(call.id, "⚠️ API Server error. Try again.", show_alert=True)
 
-    # 🟢 ADMIN POST-PAYMENT ACTIONS (SAME AS OLD CODE)
+    # 🟢 ADMIN POST-PAYMENT ACTIONS
     elif call.data.startswith("reply_pass_"):
         t_uid = call.data.split("_")[2]
         msg = bot.send_message(cid, "🔑 Is user ke liye ID / Password type karke bhejo:")
@@ -401,4 +403,3 @@ if __name__ == '__main__':
     bot.remove_webhook()
     print("🚀 V-Premium Bot is running smoothly...")
     bot.infinity_polling(skip_pending=True)
-        
