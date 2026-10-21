@@ -92,12 +92,12 @@ def send_welcome(message):
     save_user(uid)
     if check_sub(uid):
         txt = (
-            "✨ *WELCOME TO V-PREMIUM STORE!* 🎉\n\n"
-            "🔥 *Yahan Milte Hain Sabse Saste, 100% Genuine Aur Fully Trusted Premium Accounts!*\n\n"
-            "⚡ *Instant Delivery | Full Warranty | VIP Support*\n\n"
-            "👇 *Niche Diye Gaye Buttons Se Apna Option Select Karein:*"
+            "✨ <b>WELCOME TO V-PREMIUM STORE!</b> <tg-emoji emoji-id=\"5368324170671202286\">👑</tg-emoji>\n\n"
+            "🔥 <b>Yahan Milte Hain Sabse Saste, 100% Genuine Aur Fully Trusted Premium Accounts!</b>\n\n"
+            "⚡ <b>Instant Delivery | Full Warranty | VIP Support</b>\n\n"
+            "👇 <b>Niche Diye Gaye Buttons Se Apna Option Select Karein:</b>"
         )
-        bot.send_message(message.chat.id, txt, reply_markup=main_home_menu(), parse_mode="Markdown")
+        bot.send_message(message.chat.id, txt, reply_markup=main_home_menu(), parse_mode="HTML")
     else:
         m = InlineKeyboardMarkup(row_width=1)
         m.add(
@@ -105,11 +105,11 @@ def send_welcome(message):
             InlineKeyboardButton("✅ Check / Verify Subscription ✔️", callback_data="verify_sub")
         )
         warn = (
-            "⚠️ *HOLD ON! ACCESS LOCKED!* 🔒\n\n"
-            "📢 *Bot Ko Use Karne Ke Liye Pehle Hamara Official Channel Join Karna Zaroori Hai!*\n\n"
-            "👇 *Niche Button Par Click Karke Channel Join Karein Aur Phir 'Check / Verify' Dabayein:*"
+            "⚠️ <b>HOLD ON! ACCESS LOCKED!</b> 🔒\n\n"
+            "📢 <b>Bot Ko Use Karne Ke Liye Pehle Hamara Official Channel Join Karna Zaroori Hai!</b>\n\n"
+            "👇 <b>Niche Button Par Click Karke Channel Join Karein Aur Phir 'Check / Verify' Dabayein:</b>"
         )
-        bot.send_message(message.chat.id, warn, reply_markup=m, parse_mode="Markdown")
+        bot.send_message(message.chat.id, warn, reply_markup=m, parse_mode="HTML")
 
 @bot.message_handler(commands=['broadcast'])
 def broadcast_message(message):
@@ -137,7 +137,6 @@ def send_broadcast_to_all(message):
         except Exception:
             fl += 1
     bot.send_message(message.chat.id, f"✅ BROADCAST COMPLETE!\n🟢 Success: {s}\n🔴 Failed: {fl}")
-
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     cid = call.message.chat.id
@@ -148,18 +147,29 @@ def handle_query(call):
     if call.data == "verify_sub":
         if check_sub(uid):
             bot.delete_message(cid, mid)
-            txt = "🎉 *VERIFICATION SUCCESSFUL!* ✅\n\n✨ *Ab Aap Hamare Saare VIP Plans Explore Kar Sakte Hain.*\n\n👇 *Niche Se Option Select Karein:*"
-            bot.send_message(cid, txt, reply_markup=main_home_menu(), parse_mode="Markdown")
+            txt = "🎉 <b>VERIFICATION SUCCESSFUL!</b> ✅\n\n✨ <b>Ab Aap Hamare Saare VIP Plans Explore Kar Sakte Hain.</b>\n\n👇 <b>Niche Se Option Select Karein:</b>"
+            bot.send_message(cid, txt, reply_markup=main_home_menu(), parse_mode="HTML")
         else:
             bot.answer_callback_query(call.id, "❌ Bhai Pehle Channel Join Karein!", show_alert=True)
             
     elif call.data == "open_products":
-        txt = "🛍️ *V-PREMIUM STORE DASHBOARD* ⚡\n\n💎 *Sabhi Plans 100% Working Aur Guaranteed Hain!*\n\n👇 *Apna Pasandida OTT / AI Plan Select Karein:*"
-        bot.edit_message_text(txt, cid, mid, reply_markup=products_menu(), parse_mode="Markdown")
+        txt = (
+            "🛍️ <b>V-PREMIUM STORE DASHBOARD</b>\n\n"
+            "💎 <b>Sabhi Plans 100% Working Aur Guaranteed Hain!</b>\n\n"
+            "👇 <b>Apna Pasandida OTT / AI Plan Select Karein:</b>\n\n"
+            "<tg-emoji emoji-id=\"5318911503938634641\">🎬</tg-emoji> <b>Netflix</b> | "
+            "<tg-emoji emoji-id=\"5346056560537779652\">📦</tg-emoji> <b>Prime</b> | "
+            "<tg-emoji emoji-id=\"5346074681004801565\">🎵</tg-emoji> <b>Spotify</b>\n"
+            "<tg-emoji emoji-id=\"5334681713316479679\">▶️</tg-emoji> <b>YouTube</b> | "
+            "<tg-emoji emoji-id=\"5332394707655869572\">🌐</tg-emoji> <b>Hotstar</b>\n"
+            "<tg-emoji emoji-id=\"6231196182907983273\">🍥</tg-emoji> <b>Crunchyroll</b> | "
+            "<tg-emoji emoji-id=\"5951817721468424817\">🤖</tg-emoji> <b>Gemini</b>"
+        )
+        bot.edit_message_text(txt, cid, mid, reply_markup=products_menu(), parse_mode="HTML")
 
     elif call.data == "back_main":
-        txt = "✨ *WELCOME BACK TO V-PREMIUM STORE!* 🎉\n\n🔥 *Sabse Saste Aur 100% Reliable Premium Accounts.*\n\n👇 *Niche Se Option Select Karein:*"
-        bot.edit_message_text(txt, cid, mid, reply_markup=main_home_menu(), parse_mode="Markdown")
+        txt = "✨ <b>WELCOME BACK TO V-PREMIUM STORE!</b> <tg-emoji emoji-id=\"5368324170671202286\">👑</tg-emoji>\n\n🔥 <b>Sabse Saste Aur 100% Reliable Premium Accounts.</b>\n\n👇 <b>Niche Se Option Select Karein:</b>"
+        bot.edit_message_text(txt, cid, mid, reply_markup=main_home_menu(), parse_mode="HTML")
 
     elif call.data == "menu_netflix":
         m = InlineKeyboardMarkup(row_width=1)
@@ -169,7 +179,8 @@ def handle_query(call):
             InlineKeyboardButton("💻 Laptop / PC - ₹99", callback_data="buy_netflix_pc"),
             InlineKeyboardButton("🔙 Back to Products", callback_data="open_products")
         )
-        bot.edit_message_text("🎬 *NETFLIX PREMIUM (1M - 4K)* 🔥\n\n👇 *Apna Device Select Karein:*", cid, mid, reply_markup=m, parse_mode="Markdown")
+        txt = '<tg-emoji emoji-id="5318911503938634641">🎬</tg-emoji> <b>NETFLIX PREMIUM (1M - 4K)</b>\n\n👇 <b>Apna Device Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "menu_prime":
         m = InlineKeyboardMarkup(row_width=1)
@@ -178,7 +189,8 @@ def handle_query(call):
             InlineKeyboardButton("📦 6 Months Plan - ₹299", callback_data="prime_dur_6"),
             InlineKeyboardButton("🔙 Back to Products", callback_data="open_products")
         )
-        bot.edit_message_text("📦 *AMAZON PRIME VIDEO* 🎬\n\n👇 *Apna Plan Duration Select Karein:*", cid, mid, reply_markup=m, parse_mode="Markdown")
+        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME VIDEO</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "prime_dur_1":
         m = InlineKeyboardMarkup(row_width=1)
@@ -187,7 +199,8 @@ def handle_query(call):
             InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_prime1_no"),
             InlineKeyboardButton("🔙 Back to Prime Plans", callback_data="menu_prime")
         )
-        bot.edit_message_text("📦 *AMAZON PRIME (1 MONTH) - ₹70* ⚡\n\n👇 *Apna Option Select Karein:*", cid, mid, reply_markup=m, parse_mode="Markdown")
+        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME (1 MONTH) - ₹70</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "prime_dur_6":
         m = InlineKeyboardMarkup(row_width=1)
@@ -196,7 +209,8 @@ def handle_query(call):
             InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_prime6_no"),
             InlineKeyboardButton("🔙 Back to Prime Plans", callback_data="menu_prime")
         )
-        bot.edit_message_text("📦 *AMAZON PRIME (6 MONTHS) - ₹299* ⚡\n\n👇 *Apna Option Select Karein:*", cid, mid, reply_markup=m, parse_mode="Markdown")
+        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME (6 MONTHS) - ₹299</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "menu_spotify":
         m = InlineKeyboardMarkup(row_width=1)
@@ -205,7 +219,8 @@ def handle_query(call):
             InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_spotify_no"),
             InlineKeyboardButton("🔙 Back to Products", callback_data="open_products")
         )
-        bot.edit_message_text("🎵 *SPOTIFY PREMIUM (3M) - ₹60* 🎧\n\n👇 *Apna Option Select Karein:*", cid, mid, reply_markup=m, parse_mode="Markdown")
+        txt = '<tg-emoji emoji-id="5346074681004801565">🎵</tg-emoji> <b>SPOTIFY PREMIUM (3M) - ₹60</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "menu_hotstar":
         m = InlineKeyboardMarkup(row_width=1)
@@ -214,7 +229,8 @@ def handle_query(call):
             InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_hotstar_no"),
             InlineKeyboardButton("🔙 Back to Products", callback_data="open_products")
         )
-        bot.edit_message_text("🌐 *JIOHOTSTAR PREMIUM (1M) - ₹50* 🔥\n\n👇 *Apna Option Select Karein:*", cid, mid, reply_markup=m, parse_mode="Markdown")
+        txt = '<tg-emoji emoji-id="5332394707655869572">🌐</tg-emoji> <b>JIOHOTSTAR PREMIUM (1M) - ₹50</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "menu_crunchyroll":
         m = InlineKeyboardMarkup(row_width=1)
@@ -223,27 +239,38 @@ def handle_query(call):
             InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_crunchy_no"),
             InlineKeyboardButton("🔙 Back to Products", callback_data="open_products")
         )
-        bot.edit_message_text("🍥 *CRUNCHYROLL (1M) - ₹50* ⚔️\n\n👇 *Apna Option Select Karein:*", cid, mid, reply_markup=m, parse_mode="Markdown")
+        txt = '<tg-emoji emoji-id="6231196182907983273">🍥</tg-emoji> <b>CRUNCHYROLL (1M) - ₹50</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data.startswith("buy_"):
         p_name, p_amt = PLAN_DATA.get(call.data, ("VIP Plan", 30))
         sel = f"{p_name} - ₹{p_amt}"
-        txt = f"🛒 *ORDER CONFIRMATION* ⚡\n\n📦 Plan: {sel}\n💰 Total Amount: ₹{p_amt}\n\nPayment Ke Liye '✅ Pay Now' Par Click Karein:"
+        
+        icon = "🛒"
+        if "netflix" in call.data: icon = '<tg-emoji emoji-id="5318911503938634641">🎬</tg-emoji>'
+        elif "prime" in call.data: icon = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji>'
+        elif "spotify" in call.data: icon = '<tg-emoji emoji-id="5346074681004801565">🎵</tg-emoji>'
+        elif "hotstar" in call.data: icon = '<tg-emoji emoji-id="5332394707655869572">🌐</tg-emoji>'
+        elif "crunchyroll" in call.data: icon = '<tg-emoji emoji-id="6231196182907983273">🍥</tg-emoji>'
+        elif "youtube" in call.data: icon = '<tg-emoji emoji-id="5334681713316479679">▶️</tg-emoji>'
+        elif "gemini" in call.data: icon = '<tg-emoji emoji-id="5951817721468424817">🤖</tg-emoji>'
+
+        txt = f"{icon} <b>ORDER CONFIRMATION</b>\n\n📦 Plan: <b>{sel}</b>\n💰 Total Amount: <b>₹{p_amt}</b>\n\nPayment Ke Liye '✅ Pay Now' Par Click Karein:"
+        
         m = InlineKeyboardMarkup(row_width=2)
         m.add(
             InlineKeyboardButton("✅ Pay Now 💸", callback_data=f"pay_{call.data}"),
             InlineKeyboardButton("❌ Cancel", callback_data="open_products")
         )
-        bot.edit_message_text(txt, cid, mid, reply_markup=m)
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
-    # 🟢 AUTOMATIC PAYMENT GATEWAY LOGIC (DIRECT UPI QR)
     elif call.data.startswith("pay_"):
         code = call.data.replace("pay_", "")
         p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
         sel = f"{p_name} - ₹{amt}"
 
         bot.delete_message(cid, mid)
-        msg = bot.send_message(cid, "⏳ *Generating Direct UPI QR...*", parse_mode="Markdown")
+        msg = bot.send_message(cid, "⏳ <b>Generating Direct UPI QR...</b>", parse_mode="HTML")
 
         headers = {
             'Content-Type': 'application/json',
@@ -270,10 +297,10 @@ def handle_query(call):
                 bio.seek(0)
 
                 cap = (
-                    f"🛒 *YOUR SELECTED PLAN:*\n👉 {sel}\n\n"
+                    f"🛒 <b>YOUR SELECTED PLAN:</b>\n👉 {sel}\n\n"
                     f"📲 Upar QR Code Scan Karein\n"
-                    f"*(Direct GPay/PhonePe/Paytm khulega)*\n\n"
-                    f"⚠️ *Note:* Amount *₹{exact_amount}* hi rehne dein, warna auto-verify nahi hoga!\n\n"
+                    f"<i>(Direct GPay/PhonePe/Paytm khulega)</i>\n\n"
+                    f"⚠️ <b>Note:</b> Amount <b>₹{exact_amount}</b> hi rehne dein, warna auto-verify nahi hoga!\n\n"
                     f"📸 Payment hone ke baad niche '✅ I Paid' dabayein! 🚀"
                 )
 
@@ -284,17 +311,16 @@ def handle_query(call):
                 )
 
                 bot.delete_message(cid, msg.message_id)
-                bot.send_photo(cid, bio, caption=cap, reply_markup=m, parse_mode="Markdown")
+                bot.send_photo(cid, bio, caption=cap, reply_markup=m, parse_mode="HTML")
             else:
                 bot.edit_message_text("⚠️ Payment gateway error. Admin ko contact karein.", cid, msg.message_id)
         except Exception as e:
             bot.edit_message_text("⚠️ Server error. Thodi der baad try karein.", cid, msg.message_id)
 
-    # 🟢 AUTOMATIC PAYMENT VERIFICATION & REDIRECTION
     elif call.data.startswith("chk_"):
         parts = call.data.split("_")
         order_id = parts[1]
-        code = "_".join(parts[2:]) # Restore plan code
+        code = "_".join(parts[2:])
         p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
 
         headers = {'X-API-Key': TRUST_API_KEY}
@@ -303,38 +329,33 @@ def handle_query(call):
             response = requests.get(status_url, headers=headers).json()
 
             if response.get('paid') == True:
-                # Payment 100% verified automatically
-                bot.edit_message_caption("🎉 *PAYMENT VERIFIED AUTOMATICALLY!* ✅\n\nWait for the next step...", chat_id=cid, message_id=mid, parse_mode="Markdown")
+                bot.edit_message_caption("🎉 <b>PAYMENT VERIFIED AUTOMATICALLY!</b> ✅\n\nWait for the next step...", chat_id=cid, message_id=mid, parse_mode="HTML")
                 
-                # Check agar plan "Mail" wala hai ya "ID/Pass" wala
                 is_mail_plan = ("on mail ✅" in p_name.lower()) or ("youtube" in p_name.lower())
                 
                 if is_mail_plan:
-                    # User se Mail maango
                     txt = (
-                        "🎉 *PAYMENT VERIFIED!* ✅\n\n"
-                        "📧 *PLEASE SEND YOUR EMAIL / GMAIL ID FOR ACTIVATION*\n"
-                        "*(Apni Mail ID niche type karke send karein)* 👇"
+                        "🎉 <b>PAYMENT VERIFIED!</b> ✅\n\n"
+                        "📧 <b>PLEASE SEND YOUR EMAIL / GMAIL ID FOR ACTIVATION</b>\n"
+                        "<i>(Apni Mail ID niche type karke send karein)</i> 👇"
                     )
-                    msg = bot.send_message(cid, txt, parse_mode="Markdown")
+                    msg = bot.send_message(cid, txt, parse_mode="HTML")
                     bot.register_next_step_handler(msg, receive_user_gmail)
                     
-                    # Admin ko info do
-                    bot.send_message(ADMIN_ID, f"✅ *Auto-Payment Success*\nUser: `{cid}`\nPlan: {p_name}\nStatus: Waiting for user's email...", parse_mode="Markdown")
+                    bot.send_message(ADMIN_ID, f"✅ <b>Auto-Payment Success</b>\nUser: <code>{cid}</code>\nPlan: {p_name}\nStatus: Waiting for user's email...", parse_mode="HTML")
                 else:
-                    # Admin ko "Send ID/Pass" ka option do
-                    bot.send_message(cid, "🎉 *PAYMENT VERIFIED!* ✅\n\n⏳ Admin aapko jaldi hi ID & Password send karenge. Kripya wait karein!", parse_mode="Markdown")
+                    bot.send_message(cid, "🎉 <b>PAYMENT VERIFIED!</b> ✅\n\n⏳ Admin aapko jaldi hi ID & Password send karenge. Kripya wait karein!", parse_mode="HTML")
                     
                     cap = (
-                        f"🔔 *NEW AUTO-PAYMENT VERIFIED!*\n\n"
+                        f"🔔 <b>NEW AUTO-PAYMENT VERIFIED!</b>\n\n"
                         f"📦 Plan: {p_name}\n"
-                        f"👤 User ID: `{cid}`\n"
+                        f"👤 User ID: <code>{cid}</code>\n"
                         f"💰 Amount: ₹{amt}\n\n"
                         f"Action: Niche button click karke ID/Pass bhejein:"
                     )
                     m = InlineKeyboardMarkup()
                     m.add(InlineKeyboardButton("🔑 Send ID/Pass", callback_data=f"reply_pass_{cid}"))
-                    bot.send_message(ADMIN_ID, cap, reply_markup=m, parse_mode="Markdown")
+                    bot.send_message(ADMIN_ID, cap, reply_markup=m, parse_mode="HTML")
 
             else:
                 bot.answer_callback_query(call.id, "❌ Payment verify nahi hui. Agar abhi pay kiya hai toh 1 minute ruk kar dobara 'I Paid' dabayein.", show_alert=True)
@@ -342,7 +363,6 @@ def handle_query(call):
         except Exception as e:
             bot.answer_callback_query(call.id, "⚠️ API Server error. Try again.", show_alert=True)
 
-    # 🟢 ADMIN POST-PAYMENT ACTIONS
     elif call.data.startswith("reply_pass_"):
         t_uid = call.data.split("_")[2]
         msg = bot.send_message(cid, "🔑 Is user ke liye ID / Password type karke bhejo:")
@@ -351,18 +371,18 @@ def handle_query(call):
     elif call.data.startswith("inv_sent_"):
         t_uid = call.data.split("_")[2]
         try:
-            msg_user = "🎉 *Your invitation has been sent!* 💌\n\nPlease check your mail inbox or spam folder to accept it. Enjoy your Premium! ❤️🙏"
-            bot.send_message(t_uid, msg_user, parse_mode="Markdown")
-            bot.edit_message_text(f"{call.message.text}\n\n✅ *Status: Invitation Sent (User Notified)*", cid, mid)
+            msg_user = "🎉 <b>Your invitation has been sent!</b> 💌\n\nPlease check your mail inbox or spam folder to accept it. Enjoy your Premium! ❤️🙏"
+            bot.send_message(t_uid, msg_user, parse_mode="HTML")
+            bot.edit_message_text(f"{call.message.text}\n\n✅ <b>Status: Invitation Sent (User Notified)</b>", cid, mid, parse_mode="HTML")
         except Exception:
             bot.send_message(cid, "❌ User tak message nahi gaya.")
 
     elif call.data.startswith("mail_prob_"):
         t_uid = call.data.split("_")[2]
         try:
-            msg_user = f"⚠️ *Aapki Mail mein kuch problem hai, please admin se contact karein:* @{ADMIN_USERNAME}"
-            bot.send_message(t_uid, msg_user)
-            bot.edit_message_text(f"{call.message.text}\n\n⚠️ *Status: Problem Reported to User*", cid, mid)
+            msg_user = f"⚠️ <b>Aapki Mail mein kuch problem hai, please admin se contact karein:</b> @{ADMIN_USERNAME}"
+            bot.send_message(t_uid, msg_user, parse_mode="HTML")
+            bot.edit_message_text(f"{call.message.text}\n\n⚠️ <b>Status: Problem Reported to User</b>", cid, mid, parse_mode="HTML")
         except Exception:
             bot.send_message(cid, "❌ User tak message nahi gaya.")
 
@@ -372,9 +392,9 @@ def receive_user_gmail(message):
     user_gmail = message.text
 
     alert = (
-        f"📩 *RECEIVED MAIL ADDRESS!* ⚡\n\n"
-        f"👤 *User:* @{uname} (`{uid}`)\n"
-        f"📧 *Mail:* `{user_gmail}`\n\n"
+        f"📩 <b>RECEIVED MAIL ADDRESS!</b> ⚡\n\n"
+        f"👤 <b>User:</b> @{uname} (<code>{uid}</code>)\n"
+        f"📧 <b>Mail:</b> <code>{user_gmail}</code>\n\n"
         f"Action select karein:"
     )
     
@@ -384,8 +404,8 @@ def receive_user_gmail(message):
         InlineKeyboardButton("❌ Some Problem", callback_data=f"mail_prob_{uid}")
     )
     
-    bot.send_message(ADMIN_ID, alert, reply_markup=m, parse_mode="Markdown")
-    bot.send_message(uid, "✅ *AAPKI MAIL RECEIVE HO GAYI HAI!* 🎉\n\n🚀 Activation process mein hai, thoda intezar karein.")
+    bot.send_message(ADMIN_ID, alert, reply_markup=m, parse_mode="HTML")
+    bot.send_message(uid, "✅ <b>AAPKI MAIL RECEIVE HO GAYI HAI!</b> 🎉\n\n🚀 Activation process mein hai, thoda intezar karein.", parse_mode="HTML")
 
 def send_id_to_user(message, t_uid):
     try:
@@ -404,4 +424,4 @@ if __name__ == '__main__':
     bot.remove_webhook()
     print("🚀 V-Premium Bot is running smoothly...")
     bot.infinity_polling(skip_pending=True)
-        
+            
