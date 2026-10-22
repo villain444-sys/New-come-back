@@ -75,7 +75,7 @@ def check_sub(user_id):
         return status in ['member', 'creator', 'administrator']
     except Exception:
         return False
-        # 🟢 MENUS
+                  # 🟢 MENUS
 def main_home_menu():
     m = InlineKeyboardMarkup(row_width=1)
     m.add(
@@ -109,7 +109,7 @@ def send_welcome(message):
     save_user(uid)
     if check_sub(uid):
         txt = (
-            "✨ <b>WELCOME TO V-PREMIUM STORE!</b> 👑\n\n"
+            "✨ <b>WELCOME TO V-PREMIUM STORE!</b> <tg-emoji emoji-id=\"5368324170671202286\">👑</tg-emoji>\n\n"
             "🔥 <b>Yahan Milte Hain Sabse Saste, 100% Genuine Aur Fully Trusted Premium Accounts!</b>\n\n"
             "⚡ <b>Instant Delivery | Full Warranty | VIP Support</b>\n\n"
             "👇 <b>Niche Diye Gaye Buttons Se Apna Option Select Karein:</b>"
@@ -176,7 +176,7 @@ def send_broadcast_to_all(message):
         except Exception:
             fl += 1
     bot.send_message(message.chat.id, f"✅ BROADCAST COMPLETE!\n🟢 Success: {s}\n🔴 Failed: {fl}")
-# 🟢 CALLBACK HANDLERS
+                        # 🟢 CALLBACK HANDLERS
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     cid = call.message.chat.id
@@ -197,14 +197,18 @@ def handle_query(call):
             "🛍️ <b>V-PREMIUM STORE DASHBOARD</b>\n\n"
             "💎 <b>Sabhi Plans 100% Working Aur Guaranteed Hain!</b>\n\n"
             "👇 <b>Apna Pasandida OTT / AI Plan Select Karein:</b>\n\n"
-            "🎬 <b>Netflix</b> | 📦 <b>Prime</b> | 🎵 <b>Spotify</b>\n"
-            "▶️ <b>YouTube</b> | 🌐 <b>Hotstar</b>\n"
-            "🍥 <b>Crunchyroll</b> | 🤖 <b>Gemini</b>"
+            "<tg-emoji emoji-id=\"5318911503938634641\">🎬</tg-emoji> <b>Netflix</b> | "
+            "<tg-emoji emoji-id=\"5346056560537779652\">📦</tg-emoji> <b>Prime</b> | "
+            "<tg-emoji emoji-id=\"5346074681004801565\">🎵</tg-emoji> <b>Spotify</b>\n"
+            "<tg-emoji emoji-id=\"5334681713316479679\">▶️</tg-emoji> <b>YouTube</b> | "
+            "<tg-emoji emoji-id=\"5332394707655869572\">🌐</tg-emoji> <b>Hotstar</b>\n"
+            "<tg-emoji emoji-id=\"6231196182907983273\">🍥</tg-emoji> <b>Crunchyroll</b> | "
+            "<tg-emoji emoji-id=\"5951817721468424817\">🤖</tg-emoji> <b>Gemini</b>"
         )
         bot.edit_message_text(txt, cid, mid, reply_markup=products_menu(), parse_mode="HTML")
 
     elif call.data == "back_main":
-        txt = "✨ <b>WELCOME BACK TO V-PREMIUM STORE!</b> 👑\n\n🔥 <b>Sabse Saste Aur 100% Reliable Premium Accounts.</b>\n\n👇 <b>Niche Se Option Select Karein:</b>"
+        txt = "✨ <b>WELCOME BACK TO V-PREMIUM STORE!</b> <tg-emoji emoji-id=\"5368324170671202286\">👑</tg-emoji>\n\n🔥 <b>Sabse Saste Aur 100% Reliable Premium Accounts.</b>\n\n👇 <b>Niche Se Option Select Karein:</b>"
         bot.edit_message_text(txt, cid, mid, reply_markup=main_home_menu(), parse_mode="HTML")
 
     elif call.data == "my_wallet":
@@ -229,43 +233,59 @@ def handle_query(call):
     elif call.data == "menu_netflix":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📱 Mobile - ₹99", callback_data="buy_netflix_mob"), InlineKeyboardButton("📺 TV - ₹99", callback_data="buy_netflix_tv"), InlineKeyboardButton("💻 Laptop / PC - ₹99", callback_data="buy_netflix_pc"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        bot.edit_message_text('🎬 <b>NETFLIX PREMIUM (1M - 4K)</b>\n\n👇 <b>Apna Device Select Karein:</b>', cid, mid, reply_markup=m, parse_mode="HTML")
+        txt = '<tg-emoji emoji-id="5318911503938634641">🎬</tg-emoji> <b>NETFLIX PREMIUM (1M - 4K)</b>\n\n👇 <b>Apna Device Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "menu_prime":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📦 1 Month Plan - ₹70", callback_data="prime_dur_1"), InlineKeyboardButton("📦 6 Months Plan - ₹299", callback_data="prime_dur_6"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        bot.edit_message_text('📦 <b>AMAZON PRIME VIDEO</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>', cid, mid, reply_markup=m, parse_mode="HTML")
+        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME VIDEO</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "prime_dur_1":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_prime1_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_prime1_no"), InlineKeyboardButton("🔙 Back to Prime Plans", callback_data="menu_prime"))
-        bot.edit_message_text('📦 <b>AMAZON PRIME (1 MONTH) - ₹70</b>\n\n👇 <b>Apna Option Select Karein:</b>', cid, mid, reply_markup=m, parse_mode="HTML")
+        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME (1 MONTH) - ₹70</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "prime_dur_6":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_prime6_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_prime6_no"), InlineKeyboardButton("🔙 Back to Prime Plans", callback_data="menu_prime"))
-        bot.edit_message_text('📦 <b>AMAZON PRIME (6 MONTHS) - ₹299</b>\n\n👇 <b>Apna Option Select Karein:</b>', cid, mid, reply_markup=m, parse_mode="HTML")
+        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME (6 MONTHS) - ₹299</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "menu_spotify":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_spotify_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_spotify_no"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        bot.edit_message_text('🎵 <b>SPOTIFY PREMIUM (3M) - ₹60</b>\n\n👇 <b>Apna Option Select Karein:</b>', cid, mid, reply_markup=m, parse_mode="HTML")
+        txt = '<tg-emoji emoji-id="5346074681004801565">🎵</tg-emoji> <b>SPOTIFY PREMIUM (3M) - ₹60</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "menu_hotstar":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_hotstar_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_hotstar_no"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        bot.edit_message_text('🌐 <b>JIOHOTSTAR PREMIUM (1M) - ₹50</b>\n\n👇 <b>Apna Option Select Karein:</b>', cid, mid, reply_markup=m, parse_mode="HTML")
+        txt = '<tg-emoji emoji-id="5332394707655869572">🌐</tg-emoji> <b>JIOHOTSTAR PREMIUM (1M) - ₹50</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data == "menu_crunchyroll":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_crunchy_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_crunchy_no"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        bot.edit_message_text('🍥 <b>CRUNCHYROLL (1M) - ₹50</b>\n\n👇 <b>Apna Option Select Karein:</b>', cid, mid, reply_markup=m, parse_mode="HTML")
+        txt = '<tg-emoji emoji-id="6231196182907983273">🍥</tg-emoji> <b>CRUNCHYROLL (1M) - ₹50</b>\n\n👇 <b>Apna Option Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
     elif call.data.startswith("buy_"):
         p_name, p_amt = PLAN_DATA.get(call.data, ("VIP Plan", 30))
         bal = get_balance(uid)
         
-        txt = f"🛒 <b>ORDER CONFIRMATION</b>\n\n📦 Plan: <b>{p_name}</b>\n💰 Total Amount: <b>₹{p_amt}</b>\n\nPayment ka tarika select karein:"
+        icon = "🛒"
+        if "netflix" in call.data: icon = '<tg-emoji emoji-id="5318911503938634641">🎬</tg-emoji>'
+        elif "prime" in call.data: icon = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji>'
+        elif "spotify" in call.data: icon = '<tg-emoji emoji-id="5346074681004801565">🎵</tg-emoji>'
+        elif "hotstar" in call.data: icon = '<tg-emoji emoji-id="5332394707655869572">🌐</tg-emoji>'
+        elif "crunchyroll" in call.data: icon = '<tg-emoji emoji-id="6231196182907983273">🍥</tg-emoji>'
+        elif "youtube" in call.data: icon = '<tg-emoji emoji-id="5334681713316479679">▶️</tg-emoji>'
+        elif "gemini" in call.data: icon = '<tg-emoji emoji-id="5951817721468424817">🤖</tg-emoji>'
+        
+        txt = f"{icon} <b>ORDER CONFIRMATION</b>\n\n📦 Plan: <b>{p_name}</b>\n💰 Total Amount: <b>₹{p_amt}</b>\n\nPayment ka tarika select karein:"
         
         m = InlineKeyboardMarkup(row_width=1)
         m.add(
@@ -423,4 +443,4 @@ if __name__ == '__main__':
     bot.remove_webhook()
     print("🚀 V-Premium Bot is running smoothly with MongoDB & Wallet System...")
     bot.infinity_polling(skip_pending=True)
-                     
+        
