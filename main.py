@@ -35,9 +35,9 @@ def keep_alive():
     Thread(target=run_flask).start()
 
 PLAN_DATA = {
-    "buy_netflix_mob": ("Netflix 1M (📱 Mobile)", 99),
-    "buy_netflix_tv": ("Netflix 1M (📺 TV)", 99),
-    "buy_netflix_pc": ("Netflix 1M (💻 Laptop/PC)", 99),
+    "buy_netflix_mob": ("Netflix 1M (📱 Mobile)", 120),
+    "buy_netflix_tv": ("Netflix 1M (📺 TV)", 120),
+    "buy_netflix_pc": ("Netflix 1M (💻 Laptop/PC)", 120),
     "buy_prime1_yes": ("Amazon Prime 1M (On Mail ✅)", 70),
     "buy_prime1_no": ("Amazon Prime 1M (On Mail ❌)", 70),
     "buy_prime6_yes": ("Amazon Prime 6M (On Mail ✅)", 299),
@@ -91,7 +91,7 @@ def main_home_menu():
 def products_menu():
     m = InlineKeyboardMarkup(row_width=2)
     m.add(
-        InlineKeyboardButton("🎬 Netflix - ₹99", callback_data="menu_netflix"),
+        InlineKeyboardButton("🎬 Netflix 4K - ₹120", callback_data="menu_netflix"),
         InlineKeyboardButton("📦 Amazon Prime", callback_data="menu_prime"),
         InlineKeyboardButton("🎵 Spotify (3M) - ₹60", callback_data="menu_spotify"),
         InlineKeyboardButton("▶️ YouTube Prem - ₹30", callback_data="buy_youtube"),
