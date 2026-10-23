@@ -86,8 +86,8 @@ def check_sub(user_id):
     except Exception:
         return False
 
-# 🟢 GMAIL VERIFICATION LOGIC
-def check_payment_in_gmail(utr_number):
+# 🟢 GMAIL VERIFICATION LOGIC (UPDATED WITH AMOUNT CHECK)
+def check_payment_in_gmail(utr_number, expected_amount):
     try:
         mail = imaplib.IMAP4_SSL('imap.gmail.com')
         mail.login(GMAIL_ID, GMAIL_APP_PASS)
@@ -108,12 +108,18 @@ def check_payment_in_gmail(utr_number):
                     else:
                         body = msg.get_payload(decode=True).decode(errors='ignore')
                     
+                    # 🔥 NAYA LOGIC: UTR ke sath Amount bhi check karega
                     if str(utr_number) in body:
-                        return True
+                        # Email mein 120 ya 120.00 check karega
+                        if str(expected_amount) in body or f"{expected_amount}.00" in body:
+                            return True
+                        else:
+                            return "AMOUNT_MISMATCH" # UTR mila par amount match nahi hua
         return False
     except Exception as e:
         print("Gmail Error:", e)
         return False
+                         
                                                  # 🟢 MENUS
 def main_home_menu():
     m = InlineKeyboardMarkup(row_width=1)
@@ -397,7 +403,7 @@ def handle_query(call):
         bot.send_message(t_uid, f"⚠️ <b>Aapki Mail mein kuch problem hai, please admin se contact karein:</b> @{ADMIN_USERNAME}", parse_mode="HTML")
         bot.edit_message_text(f"{call.message.text}\n\n⚠️ <b>Status: Problem Reported</b>", cid, mid, parse_mode="HTML")
 
-# 🟢 PROCESS UTR VIA GMAIL (UPDATED WITH ANTI-FRAUD)
+# 🟢 PROCESS UTR VIA GMAIL (UPDATED WITH ANTI-FRAUD & AMOUNT CHECK)
 def process_utr(message, call_data):
     utr = message.text.strip()
     cid = message.chat.id
@@ -405,30 +411,40 @@ def process_utr(message, call_data):
     if len(utr) < 12:
         return bot.send_message(cid, "❌ Invalid UTR. Kripya sahi 12-digit Reference Number dalein.")
         
-    # 🔥 NAYA SYSTEM: Check if UTR is already used
     if used_utrs_col.find_one({"_id": utr}):
         return bot.send_message(cid, "⚠️ <b>FRAUD ALERT:</b> Ye UTR pehle hi use ho chuka hai!\n\nEk UTR se sirf ek hi baar payment verify hoti hai.", parse_mode="HTML")
         
     msg = bot.send_message(cid, "⏳ Checking payment securely in system... (10-15 seconds lag sakte hain)")
     
-    if check_payment_in_gmail(utr):
-        # 🔥 UTR ko database mein save kar do taaki dobara use na ho sake
+    # 🔥 Pata karo user ne kitne amount wala button dabaya hai
+    parts = call_data.split("_")
+    if "wallet" in call_data:
+        amt = int(parts[-1])
+    else:
+        code = "_".join(parts[2:])
+        _, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
+    
+    # Check mail with UTR and Amount
+    status = check_payment_in_gmail(utr, amt)
+    
+    if status == True:
         used_utrs_col.insert_one({"_id": utr})
-        
         bot.delete_message(cid, msg.message_id)
-        parts = call_data.split("_")
         
         if "wallet" in call_data:
-            amt = int(parts[-1])
             new_bal = update_balance(cid, amt)
             bot.send_message(cid, f"🎉 <b>WALLET RECHARGE SUCCESS!</b> ✅\n💰 New Balance: ₹{new_bal}", parse_mode="HTML")
         else:
             code = "_".join(parts[2:])
-            p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
+            p_name, _ = PLAN_DATA.get(code, ("VIP Plan", 30))
             process_successful_payment(cid, code, p_name, amt)
+            
+    elif status == "AMOUNT_MISMATCH":
+        bot.edit_message_text(f"⚠️ <b>SCAM ALERT!</b> 🚨\n\nIs UTR se payment mili hai, par amount <b>₹{amt}</b> nahi hai!\n\nJitne ka plan hai utne ki hi payment karein. Agar paise kat gaye hain toh admin se baat karein.", cid, msg.message_id, parse_mode="HTML")
+        
     else:
         bot.edit_message_text("❌ Payment verify nahi hui. Agar abhi pay kiya hai toh bank email aane mein thoda waqt lagta hai. 1 minute baad dobara try karein ya Admin se baat karein.", cid, msg.message_id)
-
+        
 def process_add_balance(message):
     uid = message.from_user.id
     try:
