@@ -25,6 +25,10 @@ client = MongoClient(MONGO_URL)
 db = client['VPremiumDB']
 users_col = db['users']
 wallet_col = db['wallet']
+users_col = db['users']
+wallet_col = db['wallet']
+used_utrs_col = db['used_utrs']  # 👈 YE NAYI LINE ADD KARO
+
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask('')
@@ -393,7 +397,7 @@ def handle_query(call):
         bot.send_message(t_uid, f"⚠️ <b>Aapki Mail mein kuch problem hai, please admin se contact karein:</b> @{ADMIN_USERNAME}", parse_mode="HTML")
         bot.edit_message_text(f"{call.message.text}\n\n⚠️ <b>Status: Problem Reported</b>", cid, mid, parse_mode="HTML")
 
-# 🟢 PROCESS UTR VIA GMAIL
+# 🟢 PROCESS UTR VIA GMAIL (UPDATED WITH ANTI-FRAUD)
 def process_utr(message, call_data):
     utr = message.text.strip()
     cid = message.chat.id
@@ -401,9 +405,16 @@ def process_utr(message, call_data):
     if len(utr) < 12:
         return bot.send_message(cid, "❌ Invalid UTR. Kripya sahi 12-digit Reference Number dalein.")
         
+    # 🔥 NAYA SYSTEM: Check if UTR is already used
+    if used_utrs_col.find_one({"_id": utr}):
+        return bot.send_message(cid, "⚠️ <b>FRAUD ALERT:</b> Ye UTR pehle hi use ho chuka hai!\n\nEk UTR se sirf ek hi baar payment verify hoti hai.", parse_mode="HTML")
+        
     msg = bot.send_message(cid, "⏳ Checking payment securely in system... (10-15 seconds lag sakte hain)")
     
     if check_payment_in_gmail(utr):
+        # 🔥 UTR ko database mein save kar do taaki dobara use na ho sake
+        used_utrs_col.insert_one({"_id": utr})
+        
         bot.delete_message(cid, msg.message_id)
         parts = call_data.split("_")
         
