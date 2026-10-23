@@ -4,15 +4,20 @@ import os, io, qrcode, requests
 from flask import Flask
 from threading import Thread
 from pymongo import MongoClient
+import imaplib
+import email
 
-# 🟢 BOT CONFIGURATION
+# 🟢 BOT & GMAIL CONFIGURATION
 BOT_TOKEN = "8777634130:AAEfZpoDgpx5vrjhj232poiFXt2HVw1ict8"
 CHANNEL_USERNAME = "villain_ott_hub"
 UPI_ID = "rishabhx07@fam"
 ADMIN_ID = 8692723368
 ADMIN_USERNAME = "ishowvillain"
 CHANNEL_LINK = "https://t.me/villain_ott_hub"
-TRUST_API_KEY = "Fam_live_d28474caad09563b9b8a2383599d6e88a979" 
+
+# 👉 YAHAN APNI GMAIL AUR APP PASSWORD DALEIN
+GMAIL_ID = "vineethealtheonmrt@gmail.com"  
+GMAIL_APP_PASS = "jxoq itmy zxgj xecf" 
 
 # 🟢 MONGODB CONFIGURATION
 MONGO_URL = "mongodb+srv://admin:samontop@cluster0.dtv35tb.mongodb.net/?retryWrites=true&w=majority"
@@ -51,7 +56,6 @@ PLAN_DATA = {
     "buy_youtube": ("YouTube Premium (1 Month)", 30),
     "buy_gemini": ("Gemini Advanced (18 Months)", 80),
     "buy_chatgpt": ("ChatGPT GO (1 Month)", 150)
-    
 }
 
 # 🟢 DATABASE HELPER FUNCTIONS
@@ -77,7 +81,36 @@ def check_sub(user_id):
         return status in ['member', 'creator', 'administrator']
     except Exception:
         return False
-                  # 🟢 MENUS
+
+# 🟢 GMAIL VERIFICATION LOGIC
+def check_payment_in_gmail(utr_number):
+    try:
+        mail = imaplib.IMAP4_SSL('imap.gmail.com')
+        mail.login(GMAIL_ID, GMAIL_APP_PASS)
+        mail.select('inbox')
+        _, data = mail.search(None, 'ALL')
+        mail_ids = data[0].split()[-15:] # Last 15 emails check karega
+        
+        for num in reversed(mail_ids):
+            _, msg_data = mail.fetch(num, '(RFC822)')
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_bytes(response_part[1])
+                    body = ""
+                    if msg.is_multipart():
+                        for part in msg.walk():
+                            if part.get_content_type() == "text/plain":
+                                body += part.get_payload(decode=True).decode(errors='ignore')
+                    else:
+                        body = msg.get_payload(decode=True).decode(errors='ignore')
+                    
+                    if str(utr_number) in body:
+                        return True
+        return False
+    except Exception as e:
+        print("Gmail Error:", e)
+        return False
+                                                 # 🟢 MENUS
 def main_home_menu():
     m = InlineKeyboardMarkup(row_width=1)
     m.add(
@@ -179,7 +212,7 @@ def send_broadcast_to_all(message):
         except Exception:
             fl += 1
     bot.send_message(message.chat.id, f"✅ BROADCAST COMPLETE!\n🟢 Success: {s}\n🔴 Failed: {fl}")
-                        # 🟢 CALLBACK HANDLERS
+# 🟢 CALLBACK HANDLERS
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     cid = call.message.chat.id
@@ -235,7 +268,7 @@ def handle_query(call):
 
     elif call.data == "menu_netflix":
         m = InlineKeyboardMarkup(row_width=1)
-        m.add(InlineKeyboardButton("📱 Mobile - ₹99", callback_data="buy_netflix_mob"), InlineKeyboardButton("📺 TV - ₹99", callback_data="buy_netflix_tv"), InlineKeyboardButton("💻 Laptop / PC - ₹99", callback_data="buy_netflix_pc"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
+        m.add(InlineKeyboardButton("📱 Mobile - ₹120", callback_data="buy_netflix_mob"), InlineKeyboardButton("📺 TV - ₹120", callback_data="buy_netflix_tv"), InlineKeyboardButton("💻 Laptop / PC - ₹120", callback_data="buy_netflix_pc"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
         txt = '<tg-emoji emoji-id="5318911503938634641">🎬</tg-emoji> <b>NETFLIX PREMIUM (1M - 4K)</b>\n\n👇 <b>Apna Device Select Karein:</b>'
         bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
@@ -311,6 +344,7 @@ def handle_query(call):
         else:
             bot.answer_callback_query(call.id, f"❌ Insufficient Balance!\nAapke paas ₹{bal} hain, par plan ₹{amt} ka hai.\nPehle wallet mein balance add karein.", show_alert=True)
 
+    # 🟢 DIRECT UPI GENERATION
     elif call.data.startswith("pay_"):
         code = call.data.replace("pay_", "")
         p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
@@ -318,51 +352,31 @@ def handle_query(call):
         bot.delete_message(cid, mid)
         msg = bot.send_message(cid, "⏳ <b>Generating Direct UPI QR...</b>", parse_mode="HTML")
 
-        payload = {"amount": str(amt), "note": f"Plan: {code}, User: {cid}"}
-        try:
-            api_res = requests.post('https://trustgateway.in/api/v1/orders/create', json=payload, headers={'Content-Type': 'application/json', 'X-API-Key': TRUST_API_KEY}).json()
-            if api_res.get('success'):
-                order_id = api_res['data']['order_id']
-                exact_amount = api_res['data']['amount']
-                upi_url = f"upi://pay?pa={UPI_ID}&pn=V-Premium&am={exact_amount}&cu=INR"
-                
-                qr = qrcode.make(upi_url)
-                bio = io.BytesIO()
-                bio.name = 'qr.png'
-                qr.save(bio, 'PNG')
-                bio.seek(0)
+        upi_url = f"upi://pay?pa={UPI_ID}&pn=V-Premium&am={amt}&cu=INR"
+        qr = qrcode.make(upi_url)
+        bio = io.BytesIO()
+        bio.name = 'qr.png'
+        qr.save(bio, 'PNG')
+        bio.seek(0)
 
-                cap = f"🛒 <b>YOUR SELECTED PLAN:</b>\n👉 {p_name}\n\n📲 Upar QR Code Scan Karein\n<i>(Direct GPay/PhonePe/Paytm khulega)</i>\n\n⚠️ <b>Note:</b> Amount <b>₹{exact_amount}</b> hi rehne dein, warna auto-verify nahi hoga!\n\n📸 Payment hone ke baad niche '✅ I Paid' dabayein! 🚀"
-                m = InlineKeyboardMarkup(row_width=2)
-                m.add(InlineKeyboardButton("✅ I Paid", callback_data=f"chk_{order_id}_{code}"), InlineKeyboardButton("❌ Cancel", callback_data="open_products"))
+        cap = (
+            f"🛒 <b>YOUR SELECTED PLAN:</b>\n👉 {p_name}\n\n"
+            f"📲 Upar QR Code Scan Karein\n<i>(Direct GPay/PhonePe/Paytm khulega)</i>\n\n"
+            f"⚠️ <b>Note:</b> Payment ke baad apna 12-digit UTR/Ref No. copy kar lein.\n\n"
+            f"📸 Payment hone ke baad niche '✅ I Paid' dabayein! 🚀"
+        )
+        
+        m = InlineKeyboardMarkup(row_width=2)
+        m.add(InlineKeyboardButton("✅ I Paid", callback_data=f"chk_0_{code}"), InlineKeyboardButton("❌ Cancel", callback_data="open_products"))
 
-                bot.delete_message(cid, msg.message_id)
-                bot.send_photo(cid, bio, caption=cap, reply_markup=m, parse_mode="HTML")
-            else:
-                bot.edit_message_text("⚠️ Payment gateway error. Admin ko contact karein.", cid, msg.message_id)
-        except Exception:
-            bot.edit_message_text("⚠️ Server error. Thodi der baad try karein.", cid, msg.message_id)
+        bot.delete_message(cid, msg.message_id)
+        bot.send_photo(cid, bio, caption=cap, reply_markup=m, parse_mode="HTML")
 
+    # 🟢 ASK FOR UTR
     elif call.data.startswith("chk_"):
-        parts = call.data.split("_")
-        order_id = parts[1]
-
-        try:
-            response = requests.get(f'https://trustgateway.in/api/v1/orders/status/{order_id}', headers={'X-API-Key': TRUST_API_KEY}).json()
-            if response.get('paid') == True:
-                if "wallet" in call.data:
-                    amt = int(parts[-1])
-                    new_bal = update_balance(cid, amt)
-                    bot.edit_message_caption(f"🎉 <b>WALLET RECHARGE SUCCESSFUL!</b> ✅\n\n₹{amt} aapke wallet me add ho gaye hain.\n💰 <b>New Balance:</b> ₹{new_bal}", chat_id=cid, message_id=mid, parse_mode="HTML")
-                else:
-                    code = "_".join(parts[2:])
-                    p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
-                    bot.edit_message_caption("🎉 <b>PAYMENT VERIFIED AUTOMATICALLY!</b> ✅\n\nWait for the next step...", chat_id=cid, message_id=mid, parse_mode="HTML")
-                    process_successful_payment(cid, code, p_name, amt)
-            else:
-                bot.answer_callback_query(call.id, "❌ Payment verify nahi hui. Agar pay kiya hai toh 1 min ruk kar wapas 'I Paid' dabayein.", show_alert=True)
-        except Exception:
-            bot.answer_callback_query(call.id, "⚠️ API Server error. Try again.", show_alert=True)
+        bot.delete_message(cid, mid)
+        msg = bot.send_message(cid, "📝 <b>Apna 12-digit UPI Transaction ID (UTR / Ref No) type karein:</b>\n\n<i>(Payment history mein mil jayega)</i>", parse_mode="HTML")
+        bot.register_next_step_handler(msg, process_utr, call.data)
 
     elif call.data.startswith("reply_pass_"):
         t_uid = call.data.split("_")[2]
@@ -379,6 +393,31 @@ def handle_query(call):
         bot.send_message(t_uid, f"⚠️ <b>Aapki Mail mein kuch problem hai, please admin se contact karein:</b> @{ADMIN_USERNAME}", parse_mode="HTML")
         bot.edit_message_text(f"{call.message.text}\n\n⚠️ <b>Status: Problem Reported</b>", cid, mid, parse_mode="HTML")
 
+# 🟢 PROCESS UTR VIA GMAIL
+def process_utr(message, call_data):
+    utr = message.text.strip()
+    cid = message.chat.id
+    
+    if len(utr) < 12:
+        return bot.send_message(cid, "❌ Invalid UTR. Kripya sahi 12-digit Reference Number dalein.")
+        
+    msg = bot.send_message(cid, "⏳ Checking payment securely in system... (10-15 seconds lag sakte hain)")
+    
+    if check_payment_in_gmail(utr):
+        bot.delete_message(cid, msg.message_id)
+        parts = call_data.split("_")
+        
+        if "wallet" in call_data:
+            amt = int(parts[-1])
+            new_bal = update_balance(cid, amt)
+            bot.send_message(cid, f"🎉 <b>WALLET RECHARGE SUCCESS!</b> ✅\n💰 New Balance: ₹{new_bal}", parse_mode="HTML")
+        else:
+            code = "_".join(parts[2:])
+            p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
+            process_successful_payment(cid, code, p_name, amt)
+    else:
+        bot.edit_message_text("❌ Payment verify nahi hui. Agar abhi pay kiya hai toh bank email aane mein thoda waqt lagta hai. 1 minute baad dobara try karein ya Admin se baat karein.", cid, msg.message_id)
+
 def process_add_balance(message):
     uid = message.from_user.id
     try:
@@ -387,30 +426,22 @@ def process_add_balance(message):
             return bot.send_message(message.chat.id, "⚠️ Kripya kam se kam ₹10 add karein. Wapas wallet button par click karein.")
         
         msg = bot.send_message(message.chat.id, "⏳ <b>Generating Wallet QR...</b>", parse_mode="HTML")
-        payload = {"amount": str(amt), "note": f"Wallet Recharge User: {uid}"}
         
-        api_res = requests.post('https://trustgateway.in/api/v1/orders/create', json=payload, headers={'Content-Type': 'application/json', 'X-API-Key': TRUST_API_KEY}).json()
-        if api_res.get('success'):
-            order_id = api_res['data']['order_id']
-            exact_amount = api_res['data']['amount']
-            upi_url = f"upi://pay?pa={UPI_ID}&pn=V-Premium+Wallet&am={exact_amount}&cu=INR"
-            
-            qr = qrcode.make(upi_url)
-            bio = io.BytesIO()
-            bio.name = 'qr.png'
-            qr.save(bio, 'PNG')
-            bio.seek(0)
+        upi_url = f"upi://pay?pa={UPI_ID}&pn=V-Premium+Wallet&am={amt}&cu=INR"
+        qr = qrcode.make(upi_url)
+        bio = io.BytesIO()
+        bio.name = 'qr.png'
+        qr.save(bio, 'PNG')
+        bio.seek(0)
 
-            cap = f"💳 <b>WALLET RECHARGE INITIATED</b>\n\n💰 Amount to Add: <b>₹{exact_amount}</b>\n\n📲 QR Code Scan karke Payment karein.\n⚠️ <b>Note:</b> Amount {exact_amount} hi rakhein auto-verify ke liye.\n\n📸 Pay karne ke baad '✅ I Paid' dabayein!"
-            m = InlineKeyboardMarkup(row_width=1)
-            m.add(
-                InlineKeyboardButton("✅ I Paid", callback_data=f"chk_{order_id}_wallet_{amt}"),
-                InlineKeyboardButton("❌ Cancel", callback_data="my_wallet")
-            )
-            bot.delete_message(message.chat.id, msg.message_id)
-            bot.send_photo(message.chat.id, bio, caption=cap, reply_markup=m, parse_mode="HTML")
-        else:
-            bot.edit_message_text("⚠️ Payment gateway error.", message.chat.id, msg.message_id)
+        cap = f"💳 <b>WALLET RECHARGE INITIATED</b>\n\n💰 Amount to Add: <b>₹{amt}</b>\n\n📲 QR Code Scan karke Payment karein.\n⚠️ <b>Note:</b> Payment ke baad apna 12-digit UTR/Ref No. copy kar lein.\n\n📸 Pay karne ke baad '✅ I Paid' dabayein!"
+        m = InlineKeyboardMarkup(row_width=1)
+        m.add(
+            InlineKeyboardButton("✅ I Paid", callback_data=f"chk_0_wallet_{amt}"),
+            InlineKeyboardButton("❌ Cancel", callback_data="my_wallet")
+        )
+        bot.delete_message(message.chat.id, msg.message_id)
+        bot.send_photo(message.chat.id, bio, caption=cap, reply_markup=m, parse_mode="HTML")
     except ValueError:
         bot.send_message(message.chat.id, "⚠️ Kripya sirf number type karein (Jaise: 50). Wapas wallet menu mein jaakar try karein.")
 
@@ -445,6 +476,6 @@ def send_id_to_user(message, t_uid):
 if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
-    print("🚀 V-Premium Bot is running smoothly with MongoDB & Wallet System...")
+    print("🚀 V-Premium Bot is running smoothly with Gmail UTR System...")
     bot.infinity_polling(skip_pending=True)
-        
+    
