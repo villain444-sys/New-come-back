@@ -49,7 +49,9 @@ PLAN_DATA = {
     "buy_crunchy_yes": ("Crunchyroll 1M (On Mail ✅)", 50),
     "buy_crunchy_no": ("Crunchyroll 1M (On Mail ❌)", 50),
     "buy_youtube": ("YouTube Premium (1 Month)", 30),
-    "buy_gemini": ("Gemini Advanced (18 Months)", 80)
+    "buy_gemini": ("Gemini Advanced (18 Months)", 80),
+    "buy_chatgpt": ("ChatGPT GO (1 Month)", 150)
+    
 }
 
 # 🟢 DATABASE HELPER FUNCTIONS
@@ -99,6 +101,7 @@ def products_menu():
         InlineKeyboardButton("🍥 Crunchyroll - ₹50", callback_data="menu_crunchyroll")
     )
     m.add(InlineKeyboardButton("🤖 Gemini (18M) - ₹80", callback_data="buy_gemini"))
+    m.add(InlineKeyboardButton("🧠 ChatGPT GO - ₹150", callback_data="buy_chatgpt"))
     m.add(InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
     return m
 
@@ -278,6 +281,7 @@ def handle_query(call):
         
         icon = "🛒"
         if "netflix" in call.data: icon = '<tg-emoji emoji-id="5318911503938634641">🎬</tg-emoji>'
+        elif "chatgpt" in call.data: icon = "🧠"
         elif "prime" in call.data: icon = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji>'
         elif "spotify" in call.data: icon = '<tg-emoji emoji-id="5346074681004801565">🎵</tg-emoji>'
         elif "hotstar" in call.data: icon = '<tg-emoji emoji-id="5332394707655869572">🌐</tg-emoji>'
