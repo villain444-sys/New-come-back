@@ -59,7 +59,10 @@ PLAN_DATA = {
     "buy_crunchy_no": ("Crunchyroll 1M (On Mail ❌)", 50),
     "buy_youtube": ("YouTube Premium (1 Month)", 30),
     "buy_gemini": ("Gemini Advanced (18 Months)", 80),
-    "buy_chatgpt": ("ChatGPT GO (1 Month)", 150)
+    "buy_chatgpt": ("ChatGPT GO (1 Month)", 150),
+    "buy_tgprem_6m": ("Telegram Premium (6 Months)", 1200),
+    "buy_tgprem_1y": ("Telegram Premium (1 Year)", 1700)
+    
 }
 
 # 🟢 DATABASE HELPER FUNCTIONS
@@ -145,6 +148,7 @@ def products_menu():
     )
     m.add(InlineKeyboardButton("🤖 Gemini (18M) - ₹80", callback_data="buy_gemini"))
     m.add(InlineKeyboardButton("🧠 ChatGPT GO - ₹150", callback_data="buy_chatgpt"))
+    m.add(InlineKeyboardButton("💎 Telegram Premium (Gift)", callback_data="menu_tgprem"))
     m.add(InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
     return m
 
@@ -287,7 +291,17 @@ def handle_query(call):
         m.add(InlineKeyboardButton("📦 1 Month Plan - ₹70", callback_data="prime_dur_1"), InlineKeyboardButton("📦 6 Months Plan - ₹299", callback_data="prime_dur_6"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
         txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME VIDEO</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
         bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-
+        
+    elif call.data == "menu_tgprem":
+        m = InlineKeyboardMarkup(row_width=1)
+        m.add(
+            InlineKeyboardButton("💎 6 Months Plan - ₹1200", callback_data="buy_tgprem_6m"), 
+            InlineKeyboardButton("💎 1 Year Plan - ₹1700", callback_data="buy_tgprem_1y"), 
+            InlineKeyboardButton("🔙 Back to Products", callback_data="open_products")
+        )
+        txt = '💎 <b>TELEGRAM PREMIUM (GIFT)</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
+    
     elif call.data == "prime_dur_1":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_prime1_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_prime1_no"), InlineKeyboardButton("🔙 Back to Prime Plans", callback_data="menu_prime"))
@@ -331,6 +345,7 @@ def handle_query(call):
         elif "crunchyroll" in call.data: icon = '<tg-emoji emoji-id="6231196182907983273">🍥</tg-emoji>'
         elif "youtube" in call.data: icon = '<tg-emoji emoji-id="5334681713316479679">▶️</tg-emoji>'
         elif "gemini" in call.data: icon = '<tg-emoji emoji-id="5951817721468424817">🤖</tg-emoji>'
+        elif "tgprem" in call.data: icon = "💎"
         
         txt = f"{icon} <b>ORDER CONFIRMATION</b>\n\n📦 Plan: <b>{p_name}</b>\n💰 Total Amount: <b>₹{p_amt}</b>\n\nPayment ka tarika select karein:"
         
