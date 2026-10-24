@@ -226,6 +226,25 @@ def send_broadcast_to_all(message):
         except Exception:
             fl += 1
     bot.send_message(message.chat.id, f"✅ BROADCAST COMPLETE!\n🟢 Success: {s}\n🔴 Failed: {fl}")
+
+@bot.message_handler(commands=['stats'])
+def admin_stats(message):
+    if message.from_user.id != ADMIN_ID: return
+    
+    # Total users count karna
+    total_users = users_col.count_documents({})
+    
+    # Sabhi users ke wallet ka total paisa count karna
+    total_bal = sum([u.get("balance", 0) for u in wallet_col.find()])
+    
+    txt = (
+        f"📊 <b>ADMIN DASHBOARD (STATS)</b> 📊\n\n"
+        f"👥 <b>Total Bot Users:</b> {total_users}\n"
+        f"💰 <b>Total Money in User Wallets:</b> ₹{total_bal}\n\n"
+        f"🚀 <i>V-Premium Store is growing!</i>"
+    )
+    bot.send_message(message.chat.id, txt, parse_mode="HTML")
+    
 # 🟢 CALLBACK HANDLERS
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
