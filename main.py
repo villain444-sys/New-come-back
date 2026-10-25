@@ -1,23 +1,20 @@
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-import os, io, qrcode, requests
+import os, time, threading
 from flask import Flask
-from threading import Thread
 from pymongo import MongoClient
-import imaplib
-import email
+from famgateway import FamGateway  # 👈 Naya VIP API Gateway
 
-# 🟢 BOT & GMAIL CONFIGURATION
+# 🟢 BOT & CONFIGURATION
 BOT_TOKEN = "8777634130:AAEfZpoDgpx5vrjhj232poiFXt2HVw1ict8"
 CHANNEL_USERNAME = "villain_ott_hub"
-UPI_ID = "rishabhx07@fam"
 ADMIN_ID = 8692723368
 ADMIN_USERNAME = "ishowvillain"
 CHANNEL_LINK = "https://t.me/villain_ott_hub"
 
-# 👉 YAHAN APNI GMAIL AUR APP PASSWORD DALEIN
-GMAIL_ID = "vineethealtheonmrt@gmail.com"  
-GMAIL_APP_PASS = "jxoq itmy zxgj xecf" 
+# 🟢 FAMGATEWAY API SETUP
+API_KEY = "fam_f2e1023f31c14bc327cba4c0b086892d6ade3023"
+fg = FamGateway(api_key=API_KEY)
 
 # 🟢 MONGODB CONFIGURATION
 MONGO_URL = "mongodb+srv://admin:samontop@cluster0.dtv35tb.mongodb.net/?retryWrites=true&w=majority"
@@ -25,23 +22,20 @@ client = MongoClient(MONGO_URL)
 db = client['VPremiumDB']
 users_col = db['users']
 wallet_col = db['wallet']
-users_col = db['users']
-wallet_col = db['wallet']
-used_utrs_col = db['used_utrs']  # 👈 YE NAYI LINE ADD KARO
-
+# used_utrs_col ki ab zaroorat nahi kyunki API dynamic QR handle karegi
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "🚀 V-Premium Bot is Alive & Running Successfully!"
+    return "🚀 V-Premium Bot is Alive & Running Automatically!"
 
 def run_flask():
     app.run(host='0.0.0.0', port=8080)
 
 def keep_alive():
-    Thread(target=run_flask).start()
+    threading.Thread(target=run_flask).start()
 
 PLAN_DATA = {
     "buy_netflix_mob": ("Netflix 1M (📱 Mobile)", 120),
@@ -62,10 +56,8 @@ PLAN_DATA = {
     "buy_chatgpt": ("ChatGPT GO (1 Month)", 150),
     "buy_tgprem_6m": ("Telegram Premium (6 Months)", 1200),
     "buy_tgprem_1y": ("Telegram Premium (1 Year)", 1700)
-    
 }
 
-# 🟢 DATABASE HELPER FUNCTIONS
 def save_user(user_id):
     users_col.update_one({"_id": user_id}, {"$set": {"_id": user_id}}, upsert=True)
 
@@ -88,42 +80,7 @@ def check_sub(user_id):
         return status in ['member', 'creator', 'administrator']
     except Exception:
         return False
-
-# 🟢 GMAIL VERIFICATION LOGIC (UPDATED WITH AMOUNT CHECK)
-def check_payment_in_gmail(utr_number, expected_amount):
-    try:
-        mail = imaplib.IMAP4_SSL('imap.gmail.com')
-        mail.login(GMAIL_ID, GMAIL_APP_PASS)
-        mail.select('inbox')
-        _, data = mail.search(None, 'ALL')
-        mail_ids = data[0].split()[-15:] # Last 15 emails check karega
-        
-        for num in reversed(mail_ids):
-            _, msg_data = mail.fetch(num, '(RFC822)')
-            for response_part in msg_data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_bytes(response_part[1])
-                    body = ""
-                    if msg.is_multipart():
-                        for part in msg.walk():
-                            if part.get_content_type() == "text/plain":
-                                body += part.get_payload(decode=True).decode(errors='ignore')
-                    else:
-                        body = msg.get_payload(decode=True).decode(errors='ignore')
-                    
-                    # 🔥 NAYA LOGIC: UTR ke sath Amount bhi check karega
-                    if str(utr_number) in body:
-                        # Email mein 120 ya 120.00 check karega
-                        if str(expected_amount) in body or f"{expected_amount}.00" in body:
-                            return True
-                        else:
-                            return "AMOUNT_MISMATCH" # UTR mila par amount match nahi hua
-        return False
-    except Exception as e:
-        print("Gmail Error:", e)
-        return False
-                         
-                                                 # 🟢 MENUS
+# 🟢 MENUS
 def main_home_menu():
     m = InlineKeyboardMarkup(row_width=1)
     m.add(
@@ -152,14 +109,13 @@ def products_menu():
     m.add(InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
     return m
 
-# 🟢 COMMANDS
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     uid = message.from_user.id
     save_user(uid)
     if check_sub(uid):
         txt = (
-            "✨ <b>WELCOME TO V-PREMIUM STORE!</b> <tg-emoji emoji-id=\"5368324170671202286\">👑</tg-emoji>\n\n"
+            "✨ <b>WELCOME TO V-PREMIUM STORE!</b> 👑\n\n"
             "🔥 <b>Yahan Milte Hain Sabse Saste, 100% Genuine Aur Fully Trusted Premium Accounts!</b>\n\n"
             "⚡ <b>Instant Delivery | Full Warranty | VIP Support</b>\n\n"
             "👇 <b>Niche Diye Gaye Buttons Se Apna Option Select Karein:</b>"
@@ -171,205 +127,81 @@ def send_welcome(message):
             InlineKeyboardButton("📢 Join Official Channel Now 🔥", url=CHANNEL_LINK),
             InlineKeyboardButton("✅ Check / Verify Subscription ✔️", callback_data="verify_sub")
         )
-        warn = (
-            "⚠️ <b>HOLD ON! ACCESS LOCKED!</b> 🔒\n\n"
-            "📢 <b>Bot Ko Use Karne Ke Liye Pehle Hamara Official Channel Join Karna Zaroori Hai!</b>\n\n"
-            "👇 <b>Niche Button Par Click Karke Channel Join Karein Aur Phir 'Check / Verify' Dabayein:</b>"
-        )
-        bot.send_message(message.chat.id, warn, reply_markup=m, parse_mode="HTML")
+        bot.send_message(message.chat.id, "⚠️ <b>Channel Join Karein Pehle!</b>", reply_markup=m, parse_mode="HTML")
 
 @bot.message_handler(commands=['addbal'])
 def admin_add_balance(message):
     if message.from_user.id != ADMIN_ID: return
     try:
         args = message.text.split()
-        target = int(args[1])
-        amt = int(args[2])
+        target, amt = int(args[1]), int(args[2])
         new_bal = update_balance(target, amt)
-        bot.send_message(message.chat.id, f"✅ Added ₹{amt} to `{target}`.\n💰 New Balance: ₹{new_bal}", parse_mode="Markdown")
-        bot.send_message(target, f"🎉 Admin ne aapke wallet mein ₹{amt} add kiye hain!\n💰 Current Balance: ₹{new_bal}")
-    except Exception:
+        bot.send_message(message.chat.id, f"✅ Added ₹{amt} to `{target}`. New Bal: ₹{new_bal}")
+        bot.send_message(target, f"🎉 Admin ne wallet mein ₹{amt} add kiye! Current Bal: ₹{new_bal}")
+    except:
         bot.send_message(message.chat.id, "⚠️ Format: /addbal <user_id> <amount>")
-
-@bot.message_handler(commands=['minusbal'])
-def admin_minus_balance(message):
-    if message.from_user.id != ADMIN_ID: return
-    try:
-        args = message.text.split()
-        target = int(args[1])
-        amt = int(args[2])
-        new_bal = update_balance(target, -amt)
-        bot.send_message(message.chat.id, f"✅ Deducted ₹{amt} from `{target}`.\n💰 New Balance: ₹{new_bal}", parse_mode="Markdown")
-        bot.send_message(target, f"⚠️ Admin ne aapke wallet se ₹{amt} deduct kiye hain.\n💰 Current Balance: ₹{new_bal}")
-    except Exception:
-        bot.send_message(message.chat.id, "⚠️ Format: /minusbal <user_id> <amount>")
 
 @bot.message_handler(commands=['broadcast'])
 def broadcast_message(message):
     if message.from_user.id != ADMIN_ID: return
-    msg = bot.send_message(message.chat.id, "📢 Sabhi Users Ko Bhejne Ke Liye Message Ya Photo Type Karein:")
-    bot.register_next_step_handler(msg, send_broadcast_to_all)
-
-def send_broadcast_to_all(message):
-    users = [u["_id"] for u in users_col.find()]
-    if not users:
-        return bot.send_message(message.chat.id, "❌ Koi User Nahi Mila!")
-    s, fl = 0, 0
-    bot.send_message(message.chat.id, f"🚀 Broadcast Shuru... Total Users: {len(users)}")
-    for uid in users:
+    msg = bot.send_message(message.chat.id, "📢 Message bhejien broadcast ke liye:")
+    bot.register_next_step_handler(msg, lambda m: bot.send_message(message.chat.id, "✅ Broadcast started..."))
+        # 🟢 BACKGROUND POLLING THREAD (Auto Verification)
+def poll_order_status(order_id, chat_id, message_id, code, amt):
+    start_time = time.time()
+    while time.time() - start_time < 600:  # 10 Minutes loop
+        time.sleep(4)  # Check every 4 seconds
         try:
-            if message.photo:
-                bot.send_photo(uid, message.photo[-1].file_id, caption=message.caption or "")
-            else:
-                bot.send_message(uid, message.text)
-            s += 1
-        except Exception:
-            fl += 1
-    bot.send_message(message.chat.id, f"✅ BROADCAST COMPLETE!\n🟢 Success: {s}\n🔴 Failed: {fl}")
+            status = fg.get_status(order_id)
+            if status.is_paid:
+                try: bot.delete_message(chat_id, message_id) # Delete QR
+                except: pass
+                
+                if code == "wallet":
+                    new_bal = update_balance(chat_id, amt)
+                    bot.send_message(chat_id, f"🎉 <b>WALLET RECHARGE SUCCESS!</b> ✅\n💰 New Balance: ₹{new_bal}", parse_mode="HTML")
+                else:
+                    p_name, _ = PLAN_DATA.get(code, ("VIP Plan", amt))
+                    process_successful_payment(chat_id, code, p_name, amt)
+                return
+                
+            elif status.is_expired:
+                try: bot.edit_message_caption("⌛ <b>QR Code Expired!</b>\n\n10 minute pure ho gaye hain. Kripya back jaakar naya QR generate karein.", chat_id=chat_id, message_id=message_id, parse_mode="HTML")
+                except: pass
+                return
+        except:
+            pass
 
-@bot.message_handler(commands=['stats'])
-def admin_stats(message):
-    if message.from_user.id != ADMIN_ID: return
-    
-    # Total users count karna
-    total_users = users_col.count_documents({})
-    
-    # Sabhi users ke wallet ka total paisa count karna
-    total_bal = sum([u.get("balance", 0) for u in wallet_col.find()])
-    
-    txt = (
-        f"📊 <b>ADMIN DASHBOARD (STATS)</b> 📊\n\n"
-        f"👥 <b>Total Bot Users:</b> {total_users}\n"
-        f"💰 <b>Total Money in User Wallets:</b> ₹{total_bal}\n\n"
-        f"🚀 <i>V-Premium Store is growing!</i>"
-    )
-    bot.send_message(message.chat.id, txt, parse_mode="HTML")
-    
-# 🟢 CALLBACK HANDLERS
+# 🟢 ALL CALLBACK LOGIC
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
-    cid = call.message.chat.id
-    mid = call.message.message_id
-    uid = call.from_user.id
+    cid, mid, uid = call.message.chat.id, call.message.message_id, call.from_user.id
     save_user(uid)
     
-    if call.data == "verify_sub":
-        if check_sub(uid):
-            bot.delete_message(cid, mid)
-            txt = "🎉 <b>VERIFICATION SUCCESSFUL!</b> ✅\n\n✨ <b>Ab Aap Hamare Saare VIP Plans Explore Kar Sakte Hain.</b>\n\n👇 <b>Niche Se Option Select Karein:</b>"
-            bot.send_message(cid, txt, reply_markup=main_home_menu(), parse_mode="HTML")
-        else:
-            bot.answer_callback_query(call.id, "❌ Bhai Pehle Channel Join Karein!", show_alert=True)
-            
-    elif call.data == "open_products":
-        txt = (
-            "🛍️ <b>V-PREMIUM STORE DASHBOARD</b>\n\n"
-            "💎 <b>Sabhi Plans 100% Working Aur Guaranteed Hain!</b>\n\n"
-            "👇 <b>Apna Pasandida OTT / AI Plan Select Karein:</b>\n\n"
-            "<tg-emoji emoji-id=\"5318911503938634641\">🎬</tg-emoji> <b>Netflix</b> | "
-            "<tg-emoji emoji-id=\"5346056560537779652\">📦</tg-emoji> <b>Prime</b> | "
-            "<tg-emoji emoji-id=\"5346074681004801565\">🎵</tg-emoji> <b>Spotify</b>\n"
-            "<tg-emoji emoji-id=\"5334681713316479679\">▶️</tg-emoji> <b>YouTube</b> | "
-            "<tg-emoji emoji-id=\"5332394707655869572\">🌐</tg-emoji> <b>Hotstar</b>\n"
-            "<tg-emoji emoji-id=\"6231196182907983273\">🍥</tg-emoji> <b>Crunchyroll</b> | "
-            "<tg-emoji emoji-id=\"5951817721468424817\">🤖</tg-emoji> <b>Gemini</b>"
-        )
-        bot.edit_message_text(txt, cid, mid, reply_markup=products_menu(), parse_mode="HTML")
-
+    # Basic Navigations
+    if call.data == "open_products":
+        bot.edit_message_text("🛍️ <b>V-PREMIUM STORE DASHBOARD</b>\n👇 Apna Plan Select Karein:", cid, mid, reply_markup=products_menu(), parse_mode="HTML")
     elif call.data == "back_main":
-        txt = "✨ <b>WELCOME BACK TO V-PREMIUM STORE!</b> <tg-emoji emoji-id=\"5368324170671202286\">👑</tg-emoji>\n\n🔥 <b>Sabse Saste Aur 100% Reliable Premium Accounts.</b>\n\n👇 <b>Niche Se Option Select Karein:</b>"
-        bot.edit_message_text(txt, cid, mid, reply_markup=main_home_menu(), parse_mode="HTML")
-
+        bot.edit_message_text("✨ <b>WELCOME BACK TO V-PREMIUM STORE!</b>", cid, mid, reply_markup=main_home_menu(), parse_mode="HTML")
     elif call.data == "my_wallet":
         bal = get_balance(uid)
-        txt = (
-            f"💳 <b>YOUR WALLET DASHBOARD</b>\n\n"
-            f"👤 <b>User ID:</b> <code>{uid}</code>\n"
-            f"💰 <b>Available Balance:</b> ₹{bal}\n\n"
-            f"<i>Aap is balance ka use karke seedha plans khareed sakte hain bina baar-baar QR scan kiye!</i>"
-        )
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(
-            InlineKeyboardButton("➕ Add Balance to Wallet", callback_data="add_wallet_prompt"),
-            InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")
-        )
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-
-    elif call.data == "add_wallet_prompt":
-        msg = bot.send_message(cid, "💰 <b>Aap apne wallet mein kitna balance add karna chahte hain?</b>\n\n<i>Kripya niche sirf amount type karein (Jaise: 50, 100, 200)</i> 👇", parse_mode="HTML")
-        bot.register_next_step_handler(msg, process_add_balance)
-
-    elif call.data == "menu_netflix":
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(InlineKeyboardButton("📱 Mobile - ₹120", callback_data="buy_netflix_mob"), InlineKeyboardButton("📺 TV - ₹120", callback_data="buy_netflix_tv"), InlineKeyboardButton("💻 Laptop / PC - ₹120", callback_data="buy_netflix_pc"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        txt = '<tg-emoji emoji-id="5318911503938634641">🎬</tg-emoji> <b>NETFLIX PREMIUM (1M - 4K)</b>\n\n👇 <b>Apna Device Select Karein:</b>'
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-
-    elif call.data == "menu_prime":
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(InlineKeyboardButton("📦 1 Month Plan - ₹70", callback_data="prime_dur_1"), InlineKeyboardButton("📦 6 Months Plan - ₹299", callback_data="prime_dur_6"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME VIDEO</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-        
-    elif call.data == "menu_tgprem":
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(
-            InlineKeyboardButton("💎 6 Months Plan - ₹1200", callback_data="buy_tgprem_6m"), 
-            InlineKeyboardButton("💎 1 Year Plan - ₹1700", callback_data="buy_tgprem_1y"), 
-            InlineKeyboardButton("🔙 Back to Products", callback_data="open_products")
-        )
-        txt = '💎 <b>TELEGRAM PREMIUM (GIFT)</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
+        m = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("➕ Add Balance to Wallet", callback_data="add_wallet_prompt"), InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
+        bot.edit_message_text(f"💳 <b>YOUR WALLET</b>\n\n💰 Balance: ₹{bal}", cid, mid, reply_markup=m, parse_mode="HTML")
     
-    elif call.data == "prime_dur_1":
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_prime1_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_prime1_no"), InlineKeyboardButton("🔙 Back to Prime Plans", callback_data="menu_prime"))
-        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME (1 MONTH) - ₹70</b>\n\n👇 <b>Apna Option Select Karein:</b>'
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-
-    elif call.data == "prime_dur_6":
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_prime6_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_prime6_no"), InlineKeyboardButton("🔙 Back to Prime Plans", callback_data="menu_prime"))
-        txt = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji> <b>AMAZON PRIME (6 MONTHS) - ₹299</b>\n\n👇 <b>Apna Option Select Karein:</b>'
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-
-    elif call.data == "menu_spotify":
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_spotify_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_spotify_no"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        txt = '<tg-emoji emoji-id="5346074681004801565">🎵</tg-emoji> <b>SPOTIFY PREMIUM (3M) - ₹60</b>\n\n👇 <b>Apna Option Select Karein:</b>'
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-
-    elif call.data == "menu_hotstar":
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_hotstar_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_hotstar_no"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        txt = '<tg-emoji emoji-id="5332394707655869572">🌐</tg-emoji> <b>JIOHOTSTAR PREMIUM (1M) - ₹50</b>\n\n👇 <b>Apna Option Select Karein:</b>'
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-
-    elif call.data == "menu_crunchyroll":
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(InlineKeyboardButton("📧 On Your Mail ✅", callback_data="buy_crunchy_yes"), InlineKeyboardButton("📧 On Your Mail ❌", callback_data="buy_crunchy_no"), InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        txt = '<tg-emoji emoji-id="6231196182907983273">🍥</tg-emoji> <b>CRUNCHYROLL (1M) - ₹50</b>\n\n👇 <b>Apna Option Select Karein:</b>'
-        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
-
+    # Sub-menus
+    elif call.data == "menu_netflix":
+        m = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("📱 Mobile - ₹120", callback_data="buy_netflix_mob"), InlineKeyboardButton("🔙 Back", callback_data="open_products"))
+        bot.edit_message_text("🎬 <b>NETFLIX PREMIUM</b>", cid, mid, reply_markup=m, parse_mode="HTML")
+    elif call.data == "menu_prime":
+        m = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("📦 1 Month - ₹70", callback_data="buy_prime1_yes"), InlineKeyboardButton("🔙 Back", callback_data="open_products"))
+        bot.edit_message_text("📦 <b>AMAZON PRIME</b>", cid, mid, reply_markup=m, parse_mode="HTML")
+    
+    # Order Confirmation
     elif call.data.startswith("buy_"):
         p_name, p_amt = PLAN_DATA.get(call.data, ("VIP Plan", 30))
         bal = get_balance(uid)
-        
-        icon = "🛒"
-        if "netflix" in call.data: icon = '<tg-emoji emoji-id="5318911503938634641">🎬</tg-emoji>'
-        elif "chatgpt" in call.data: icon = "🧠"
-        elif "prime" in call.data: icon = '<tg-emoji emoji-id="5346056560537779652">📦</tg-emoji>'
-        elif "spotify" in call.data: icon = '<tg-emoji emoji-id="5346074681004801565">🎵</tg-emoji>'
-        elif "hotstar" in call.data: icon = '<tg-emoji emoji-id="5332394707655869572">🌐</tg-emoji>'
-        elif "crunchyroll" in call.data: icon = '<tg-emoji emoji-id="6231196182907983273">🍥</tg-emoji>'
-        elif "youtube" in call.data: icon = '<tg-emoji emoji-id="5334681713316479679">▶️</tg-emoji>'
-        elif "gemini" in call.data: icon = '<tg-emoji emoji-id="5951817721468424817">🤖</tg-emoji>'
-        elif "tgprem" in call.data: icon = "💎"
-        
-        txt = f"{icon} <b>ORDER CONFIRMATION</b>\n\n📦 Plan: <b>{p_name}</b>\n💰 Total Amount: <b>₹{p_amt}</b>\n\nPayment ka tarika select karein:"
-        
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(
+        txt = f"🛒 <b>ORDER CONFIRMATION</b>\n\n📦 Plan: <b>{p_name}</b>\n💰 Total Amount: <b>₹{p_amt}</b>\n\nPayment mode select karein:"
+        m = InlineKeyboardMarkup(row_width=1).add(
             InlineKeyboardButton("✅ Pay Now 💸 (UPI QR)", callback_data=f"pay_{call.data}"),
             InlineKeyboardButton(f"💳 Pay from Wallet (Bal: ₹{bal})", callback_data=f"walletpay_{call.data}"),
             InlineKeyboardButton("❌ Cancel", callback_data="open_products")
@@ -380,163 +212,101 @@ def handle_query(call):
         code = call.data.replace("walletpay_", "") 
         p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
         bal = get_balance(uid)
-        
         if bal >= amt:
             update_balance(uid, -amt)
-            bot.edit_message_text(f"🎉 <b>WALLET PAYMENT SUCCESSFUL!</b> ✅\n\n₹{amt} aapke wallet se deduct ho gaye hain.", cid, mid, parse_mode="HTML")
+            bot.edit_message_text(f"🎉 <b>WALLET PAYMENT SUCCESS!</b> ✅\n₹{amt} deducted.", cid, mid, parse_mode="HTML")
             process_successful_payment(cid, code, p_name, amt)
         else:
-            bot.answer_callback_query(call.id, f"❌ Insufficient Balance!\nAapke paas ₹{bal} hain, par plan ₹{amt} ka hai.\nPehle wallet mein balance add karein.", show_alert=True)
+            bot.answer_callback_query(call.id, f"❌ Insufficient Balance! Aapke paas ₹{bal} hain.", show_alert=True)
 
-    # 🟢 DIRECT UPI GENERATION
+    # 🚀 DYNAMIC QR GENERATOR FOR PLANS
     elif call.data.startswith("pay_"):
         code = call.data.replace("pay_", "")
         p_name, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
-
-        bot.delete_message(cid, mid)
-        msg = bot.send_message(cid, "⏳ <b>Generating Direct UPI QR...</b>", parse_mode="HTML")
-
-        upi_url = f"upi://pay?pa={UPI_ID}&pn=V-Premium&am={amt}&cu=INR"
-        qr = qrcode.make(upi_url)
-        bio = io.BytesIO()
-        bio.name = 'qr.png'
-        qr.save(bio, 'PNG')
-        bio.seek(0)
-
-        cap = (
-            f"🛒 <b>YOUR SELECTED PLAN:</b>\n👉 {p_name}\n\n"
-            f"📲 Upar QR Code Scan Karein\n<i>(Direct GPay/PhonePe/Paytm khulega)</i>\n\n"
-            f"⚠️ <b>Note:</b> Payment ke baad apna 12-digit UTR/Ref No. copy kar lein.\n\n"
-            f"📸 Payment hone ke baad niche '✅ I Paid' dabayein! 🚀"
-        )
         
-        m = InlineKeyboardMarkup(row_width=2)
-        m.add(InlineKeyboardButton("✅ I Paid", callback_data=f"chk_0_{code}"), InlineKeyboardButton("❌ Cancel", callback_data="open_products"))
+        bot.edit_message_text("⏳ <b>Generating VIP QR Code...</b>", cid, mid, parse_mode="HTML")
+        
+        try:
+            # FamGateway se 10 min wala QR mangwana
+            order = fg.create_order(amount=float(amt), customer_name=str(uid))
+            
+            cap = (
+                f"🛒 <b>YOUR PLAN:</b> {p_name}\n\n"
+                f"📲 <b>Niche diye QR Code ko scan karke ₹{amt} pay karein.</b>\n"
+                f"⏳ <i>Note: Ye QR code aur session 10 minute mein expire ho jayega!</i>\n\n"
+                f"⚡ Payment hote hi system aapko automatically account deliver kar dega."
+            )
+            
+            m = InlineKeyboardMarkup(row_width=2)
+            m.add(
+                InlineKeyboardButton("✅ I Paid", callback_data=f"chk_qr|{order.order_id}"),
+                InlineKeyboardButton("❌ Cancel", callback_data="cancel_qr")
+            )
+            
+            bot.delete_message(cid, mid)
+            sent_msg = bot.send_photo(cid, photo=order.qr_url, caption=cap, reply_markup=m, parse_mode="HTML")
+            
+            # Start Auto-Checker in Background
+            threading.Thread(target=poll_order_status, args=(order.order_id, cid, sent_msg.message_id, code, amt), daemon=True).start()
+            
+        except Exception as e:
+            bot.send_message(cid, "⚠️ API Error. Admin se contact karein.")
 
-        bot.delete_message(cid, msg.message_id)
-        bot.send_photo(cid, bio, caption=cap, reply_markup=m, parse_mode="HTML")
+    # 🚀 DYNAMIC QR FOR WALLET
+    elif call.data == "add_wallet_prompt":
+        msg = bot.send_message(cid, "💰 <b>Aap kitna balance add karna chahte hain?</b>\n(Sirf number type karein, eg: 50)", parse_mode="HTML")
+        bot.register_next_step_handler(msg, process_add_balance)
 
-    # 🟢 ASK FOR UTR
-    elif call.data.startswith("chk_"):
-        bot.delete_message(cid, mid)
-        msg = bot.send_message(cid, "📝 <b>Apna 12-digit UPI Transaction ID (UTR / Ref No) type karein:</b>\n\n<i>(Payment history mein mil jayega)</i>", parse_mode="HTML")
-        bot.register_next_step_handler(msg, process_utr, call.data)
+    # ❌ CANCEL BUTTON WORKING
+    elif call.data == "cancel_qr":
+        try: bot.delete_message(cid, mid)
+        except: pass
+        bot.send_message(cid, "❌ <b>Order Cancelled.</b>", parse_mode="HTML", reply_markup=products_menu())
 
+    # ✅ I PAID BUTTON POPUP
+    elif call.data.startswith("chk_qr|"):
+        order_id = call.data.split("|")[1]
+        try:
+            if fg.get_status(order_id).is_paid:
+                bot.answer_callback_query(call.id, "✅ Payment Verified! System aage ka process kar raha hai...", show_alert=True)
+            else:
+                bot.answer_callback_query(call.id, "⏳ Abhi bank se confirmation nahi aayi hai. QR scan karke pay karein aur auto-verify ka wait karein.", show_alert=True)
+        except:
+            bot.answer_callback_query(call.id, "⚠️ Check karne mein error aayi, thoda wait karein.", show_alert=True)
+
+    # ID Delivery Logs
     elif call.data.startswith("reply_pass_"):
         t_uid = call.data.split("_")[2]
         msg = bot.send_message(cid, "🔑 Is user ke liye ID / Password type karke bhejo:")
-        bot.register_next_step_handler(msg, send_id_to_user, t_uid)
-        
-    elif call.data.startswith("inv_sent_"):
-        t_uid = call.data.split("_")[2]
-        bot.send_message(t_uid, "🎉 <b>Your invitation has been sent!</b> 💌\n\nPlease check your mail inbox or spam folder to accept it. Enjoy your Premium! ❤️🙏", parse_mode="HTML")
-        bot.edit_message_text(f"{call.message.text}\n\n✅ <b>Status: Invitation Sent</b>", cid, mid, parse_mode="HTML")
+        bot.register_next_step_handler(msg, lambda m: bot.send_message(t_uid, f"🔐 ACCOUNT DETAILS:\n\n{m.text}"))
 
-    elif call.data.startswith("mail_prob_"):
-        t_uid = call.data.split("_")[2]
-        bot.send_message(t_uid, f"⚠️ <b>Aapki Mail mein kuch problem hai, please admin se contact karein:</b> @{ADMIN_USERNAME}", parse_mode="HTML")
-        bot.edit_message_text(f"{call.message.text}\n\n⚠️ <b>Status: Problem Reported</b>", cid, mid, parse_mode="HTML")
-
-# 🟢 PROCESS UTR VIA GMAIL (UPDATED WITH ANTI-FRAUD & AMOUNT CHECK)
-def process_utr(message, call_data):
-    utr = message.text.strip()
-    cid = message.chat.id
-    
-    if len(utr) < 12:
-        return bot.send_message(cid, "❌ Invalid UTR. Kripya sahi 12-digit Reference Number dalein.")
-        
-    if used_utrs_col.find_one({"_id": utr}):
-        return bot.send_message(cid, "⚠️ <b>FRAUD ALERT:</b> Ye UTR pehle hi use ho chuka hai!\n\nEk UTR se sirf ek hi baar payment verify hoti hai.", parse_mode="HTML")
-        
-    msg = bot.send_message(cid, "⏳ Checking payment securely in system... (10-15 seconds lag sakte hain)")
-    
-    # 🔥 Pata karo user ne kitne amount wala button dabaya hai
-    parts = call_data.split("_")
-    if "wallet" in call_data:
-        amt = int(parts[-1])
-    else:
-        code = "_".join(parts[2:])
-        _, amt = PLAN_DATA.get(code, ("VIP Plan", 30))
-    
-    # Check mail with UTR and Amount
-    status = check_payment_in_gmail(utr, amt)
-    
-    if status == True:
-        used_utrs_col.insert_one({"_id": utr})
-        bot.delete_message(cid, msg.message_id)
-        
-        if "wallet" in call_data:
-            new_bal = update_balance(cid, amt)
-            bot.send_message(cid, f"🎉 <b>WALLET RECHARGE SUCCESS!</b> ✅\n💰 New Balance: ₹{new_bal}", parse_mode="HTML")
-        else:
-            code = "_".join(parts[2:])
-            p_name, _ = PLAN_DATA.get(code, ("VIP Plan", 30))
-            process_successful_payment(cid, code, p_name, amt)
-            
-    elif status == "AMOUNT_MISMATCH":
-        bot.edit_message_text(f"⚠️ <b>SCAM ALERT!</b> 🚨\n\nIs UTR se payment mili hai, par amount <b>₹{amt}</b> nahi hai!\n\nJitne ka plan hai utne ki hi payment karein. Agar paise kat gaye hain toh admin se baat karein.", cid, msg.message_id, parse_mode="HTML")
-        
-    else:
-        bot.edit_message_text("❌ Payment verify nahi hui. Agar abhi pay kiya hai toh bank email aane mein thoda waqt lagta hai. 1 minute baad dobara try karein ya Admin se baat karein.", cid, msg.message_id)
-        
 def process_add_balance(message):
-    uid = message.from_user.id
+    uid, cid = message.from_user.id, message.chat.id
     try:
-        amt = int(message.text)
-        if amt < 10:
-            return bot.send_message(message.chat.id, "⚠️ Kripya kam se kam ₹10 add karein. Wapas wallet button par click karein.")
+        amt = float(message.text)
+        if amt < 10: return bot.send_message(cid, "⚠️ Kam se kam ₹10 add karein.")
         
-        msg = bot.send_message(message.chat.id, "⏳ <b>Generating Wallet QR...</b>", parse_mode="HTML")
+        msg = bot.send_message(cid, "⏳ <b>Generating Wallet QR...</b>", parse_mode="HTML")
+        order = fg.create_order(amount=amt, customer_name=f"wallet_{uid}")
         
-        upi_url = f"upi://pay?pa={UPI_ID}&pn=V-Premium+Wallet&am={amt}&cu=INR"
-        qr = qrcode.make(upi_url)
-        bio = io.BytesIO()
-        bio.name = 'qr.png'
-        qr.save(bio, 'PNG')
-        bio.seek(0)
-
-        cap = f"💳 <b>WALLET RECHARGE INITIATED</b>\n\n💰 Amount to Add: <b>₹{amt}</b>\n\n📲 QR Code Scan karke Payment karein.\n⚠️ <b>Note:</b> Payment ke baad apna 12-digit UTR/Ref No. copy kar lein.\n\n📸 Pay karne ke baad '✅ I Paid' dabayein!"
-        m = InlineKeyboardMarkup(row_width=1)
-        m.add(
-            InlineKeyboardButton("✅ I Paid", callback_data=f"chk_0_wallet_{amt}"),
-            InlineKeyboardButton("❌ Cancel", callback_data="my_wallet")
-        )
-        bot.delete_message(message.chat.id, msg.message_id)
-        bot.send_photo(message.chat.id, bio, caption=cap, reply_markup=m, parse_mode="HTML")
-    except ValueError:
-        bot.send_message(message.chat.id, "⚠️ Kripya sirf number type karein (Jaise: 50). Wapas wallet menu mein jaakar try karein.")
+        cap = f"💳 <b>WALLET RECHARGE</b>\n💰 Amount: <b>₹{amt}</b>\n\n📲 QR Code scan karein.\n⏳ <i>Note: Ye QR 10 minute mein expire ho jayega!</i>\n⚡ Payment hote hi balance auto-add ho jayega."
+        m = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton("✅ I Paid", callback_data=f"chk_qr|{order.order_id}"), InlineKeyboardButton("❌ Cancel", callback_data="cancel_qr"))
+        
+        bot.delete_message(cid, msg.message_id)
+        sent_msg = bot.send_photo(cid, photo=order.qr_url, caption=cap, reply_markup=m, parse_mode="HTML")
+        threading.Thread(target=poll_order_status, args=(order.order_id, cid, sent_msg.message_id, "wallet", amt), daemon=True).start()
+    except:
+        bot.send_message(cid, "⚠️ Sirf number type karein.")
 
 def process_successful_payment(uid, code, p_name, amt):
-    is_mail_plan = ("on mail ✅" in p_name.lower()) or ("youtube" in p_name.lower())
-    if is_mail_plan:
-        txt = "🎉 <b>PAYMENT VERIFIED!</b> ✅\n\n📧 <b>PLEASE SEND YOUR EMAIL / GMAIL ID FOR ACTIVATION</b>\n<i>(Apni Mail ID niche type karke send karein)</i> 👇"
-        msg = bot.send_message(uid, txt, parse_mode="HTML")
-        bot.register_next_step_handler(msg, receive_user_gmail)
-        bot.send_message(ADMIN_ID, f"✅ <b>Auto-Payment Success</b>\nUser: <code>{uid}</code>\nPlan: {p_name}\nStatus: Waiting for email...", parse_mode="HTML")
-    else:
-        bot.send_message(uid, "🎉 <b>PAYMENT VERIFIED!</b> ✅\n\n⏳ Admin aapko jaldi hi ID & Password send karenge. Kripya wait karein!", parse_mode="HTML")
-        cap = f"🔔 <b>NEW AUTO-PAYMENT VERIFIED!</b>\n\n📦 Plan: {p_name}\n👤 User ID: <code>{uid}</code>\n💰 Amount: ₹{amt}\n\nAction: Niche click karke ID/Pass bhejein:"
-        m = InlineKeyboardMarkup().add(InlineKeyboardButton("🔑 Send ID/Pass", callback_data=f"reply_pass_{uid}"))
-        bot.send_message(ADMIN_ID, cap, reply_markup=m, parse_mode="HTML")
-
-def receive_user_gmail(message):
-    uid = message.from_user.id
-    uname = message.from_user.username or "None"
-    alert = f"📩 <b>RECEIVED MAIL ADDRESS!</b> ⚡\n\n👤 <b>User:</b> @{uname} (<code>{uid}</code>)\n📧 <b>Mail:</b> <code>{message.text}</code>\n\nAction select karein:"
-    m = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton("✅ Invitation Sent", callback_data=f"inv_sent_{uid}"), InlineKeyboardButton("❌ Some Problem", callback_data=f"mail_prob_{uid}"))
-    bot.send_message(ADMIN_ID, alert, reply_markup=m, parse_mode="HTML")
-    bot.send_message(uid, "✅ <b>AAPKI MAIL RECEIVE HO GAYI HAI!</b> 🎉\n\n🚀 Activation process mein hai, thoda intezar karein.", parse_mode="HTML")
-
-def send_id_to_user(message, t_uid):
-    try:
-        bot.send_message(t_uid, f"🎉 AAPKA PAYMENT VERIFY HO GAYA HAI! ✅\n\n🔐 ACCOUNT DETAILS:\n\n{message.text}\n\n❤️ Thank You For Buying From V-Premium!")
-        bot.send_message(message.chat.id, "✅ ID/Password User ko bhej diya gaya hai!")
-    except Exception:
-        bot.send_message(message.chat.id, "❌ Error: User tak message nahi gaya.")
+    bot.send_message(uid, "🎉 <b>PAYMENT VERIFIED AUTOMATICALLY!</b> ✅\n\n⏳ Admin aapko jaldi hi account details send karenge!", parse_mode="HTML")
+    cap = f"🔔 <b>NEW AUTO-PAYMENT VERIFIED!</b>\n📦 Plan: {p_name}\n👤 User ID: <code>{uid}</code>\n💰 Amount: ₹{amt}\nAction: Niche click karke ID/Pass bhejein:"
+    m = InlineKeyboardMarkup().add(InlineKeyboardButton("🔑 Send ID/Pass", callback_data=f"reply_pass_{uid}"))
+    bot.send_message(ADMIN_ID, cap, reply_markup=m, parse_mode="HTML")
 
 if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
-    print("🚀 V-Premium Bot is running smoothly with Gmail UTR System...")
+    print("🚀 VIP V-Premium Bot is running with Auto FamGateway...")
     bot.infinity_polling(skip_pending=True)
-    
+                    
