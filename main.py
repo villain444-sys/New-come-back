@@ -110,6 +110,49 @@ def products_menu():
     return m
 
 @bot.message_handler(commands=['start'])
+
+# 🟢 ADMIN STATS COMMAND
+@bot.message_handler(commands=['stats'])
+def admin_stats(message):
+    if message.from_user.id != ADMIN_ID: return
+    
+    total_users = users_col.count_documents({})
+    total_bal = sum([u.get("balance", 0) for u in wallet_col.find()])
+    
+    txt = (
+        f"📊 <b>ADMIN DASHBOARD (STATS)</b> 📊\n\n"
+        f"👥 <b>Total Bot Users:</b> {total_users}\n"
+        f"💰 <b>Total Money in User Wallets:</b> ₹{total_bal}\n\n"
+        f"🚀 <i>V-Premium Store is growing!</i>"
+    )
+    bot.send_message(message.chat.id, txt, parse_mode="HTML")
+
+# 🟢 BROADCAST COMMAND (Fully Working)
+@bot.message_handler(commands=['broadcast'])
+def broadcast_message(message):
+    if message.from_user.id != ADMIN_ID: return
+    msg = bot.send_message(message.chat.id, "📢 Sabhi Users Ko Bhejne Ke Liye Message Ya Photo Type Karein:")
+    bot.register_next_step_handler(msg, send_broadcast_to_all)
+
+def send_broadcast_to_all(message):
+    users = [u["_id"] for u in users_col.find()]
+    if not users:
+        return bot.send_message(message.chat.id, "❌ Koi User Nahi Mila!")
+    s, fl = 0, 0
+    bot.send_message(message.chat.id, f"🚀 Broadcast Shuru... Total Users: {len(users)}")
+    
+    for uid in users:
+        try:
+            if message.photo:
+                bot.send_photo(uid, message.photo[-1].file_id, caption=message.caption or "")
+            else:
+                bot.send_message(uid, message.text)
+            s += 1
+        except Exception:
+            fl += 1
+            
+    bot.send_message(message.chat.id, f"✅ BROADCAST COMPLETE!\n🟢 Success: {s}\n🔴 Failed: {fl}")
+    
 def send_welcome(message):
     uid = message.from_user.id
     save_user(uid)
