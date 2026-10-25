@@ -1,6 +1,7 @@
 pyTelegramBotAPI
 Flask
-qrcode
-pillow
-requests
 pymongo
+famgateway
+qrcode
+requests
+Pillow
