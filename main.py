@@ -263,7 +263,7 @@ def handle_query(call):
         txt = '📦 <b>AMAZON PRIME VIDEO</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
         bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
-        elif call.data == "menu_spotify":
+    elif call.data == "menu_spotify":
         m = InlineKeyboardMarkup(row_width=1)
         m.add(InlineKeyboardButton("📧 On Your Mail ✅ - ₹60", callback_data="buy_spotify_yes"))
         m.add(InlineKeyboardButton("📧 On Your Mail ❌ - ₹60", callback_data="buy_spotify_no"))
