@@ -252,14 +252,10 @@ def handle_query(call):
         bot.edit_message_text("🎬 <b>NETFLIX PREMIUM</b>", cid, mid, reply_markup=m, parse_mode="HTML")
         
     elif call.data == "menu_prime":
-        # row_width=1 se saare buttons ek ke niche ek aayenge
         m = InlineKeyboardMarkup(row_width=1)
-        
-        # Har button ko alag se add karna hai taaki koi miss na ho
         m.add(InlineKeyboardButton("📦 1 Month Plan - ₹70", callback_data="prime_dur_1"))
-        m.add(InlineKeyboardButton("📦 6 Months Plan - ₹250", callback_data="prime_dur_6"))
+        m.add(InlineKeyboardButton("📦 6 Months Plan - ₹299", callback_data="prime_dur_6"))
         m.add(InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
-        
         txt = '📦 <b>AMAZON PRIME VIDEO</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
         bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
 
@@ -290,7 +286,7 @@ def handle_query(call):
         m.add(InlineKeyboardButton("📧 On Your Mail ❌ - ₹50", callback_data="buy_crunchy_no"))
         m.add(InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
         bot.edit_message_text("🍥 <b>CRUNCHYROLL (1M)</b>\n\n👇 Apna Option Select Karein:", cid, mid, reply_markup=m, parse_mode="HTML")
-
+        
     
     
     # Order Confirmation
