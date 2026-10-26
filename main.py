@@ -94,20 +94,22 @@ def main_home_menu():
     return m
 
 def products_menu():
-    m = InlineKeyboardMarkup(row_width=2)
-    m.add(
-        InlineKeyboardButton("🎬 Netflix 4K - ₹120", callback_data="menu_netflix"),
-        InlineKeyboardButton("📦 Amazon Prime", callback_data="menu_prime"),
-        InlineKeyboardButton("🎵 Spotify (3M) - ₹60", callback_data="menu_spotify"),
-        InlineKeyboardButton("▶️ YouTube Prem - ₹30", callback_data="buy_youtube"),
-        InlineKeyboardButton("🌐 JioHotstar - ₹50", callback_data="menu_hotstar"),
-        InlineKeyboardButton("🍥 Crunchyroll - ₹50", callback_data="menu_crunchyroll")
-    )
+    # row_width=1 karne se saare buttons ek ke niche ek (lambe) aayenge
+    m = InlineKeyboardMarkup(row_width=1)
+    
+    m.add(InlineKeyboardButton("🎬 Netflix 4K - ₹120", callback_data="menu_netflix"))
+    m.add(InlineKeyboardButton("📦 Amazon Prime 1M & 6M", callback_data="menu_prime"))
+    m.add(InlineKeyboardButton("🎵 Spotify (3M) - ₹60", callback_data="menu_spotify"))
+    m.add(InlineKeyboardButton("▶️ YouTube Prem - ₹30", callback_data="buy_youtube"))
+    m.add(InlineKeyboardButton("🌐 JioHotstar - ₹50", callback_data="menu_hotstar"))
+    m.add(InlineKeyboardButton("🍥 Crunchyroll - ₹50", callback_data="menu_crunchyroll"))
     m.add(InlineKeyboardButton("🤖 Gemini (18M) - ₹80", callback_data="buy_gemini"))
     m.add(InlineKeyboardButton("🧠 ChatGPT GO - ₹150", callback_data="buy_chatgpt"))
     m.add(InlineKeyboardButton("💎 Telegram Premium (Gift)", callback_data="menu_tgprem"))
     m.add(InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
+    
     return m
+    
 
 # 🟢 1. START COMMAND
 @bot.message_handler(commands=['start'])
