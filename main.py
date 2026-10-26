@@ -6,7 +6,7 @@ from pymongo import MongoClient
 from famgateway import FamGateway  # 👈 Naya VIP API Gateway
 
 # 🟢 BOT & CONFIGURATION
-BOT_TOKEN = "8777634130:AAEfZpoDgpx5vrjhj232poiFXt2HVw1ict8"
+BOT_TOKEN = "8777634130:AAHAaY42Mp97tUEtRuL50wYrDOR6iikhvfQ"
 CHANNEL_USERNAME = "villain_ott_hub"
 ADMIN_ID = 8692723368
 ADMIN_USERNAME = "ishowvillain"
