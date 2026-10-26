@@ -109,9 +109,26 @@ def products_menu():
     m.add(InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
     return m
 
+# 🟢 1. START COMMAND
 @bot.message_handler(commands=['start'])
+def send_welcome(message):
+    try:
+        uid = message.from_user.id
+        save_user(uid)
+        
+        if check_sub(uid):
+            txt = "✨ <b>WELCOME TO V-PREMIUM STORE!</b> 👑\n\n🔥 <b>Yahan Milte Hain Sabse Saste, 100% Genuine Premium Accounts!</b>\n\n👇 <b>Niche Diye Gaye Buttons Se Apna Option Select Karein:</b>"
+            bot.send_message(message.chat.id, txt, reply_markup=main_home_menu(), parse_mode="HTML")
+        else:
+            m = InlineKeyboardMarkup(row_width=1).add(
+                InlineKeyboardButton("📢 Join Official Channel 🔥", url=CHANNEL_LINK),
+                InlineKeyboardButton("✅ Check / Verify ✔️", callback_data="verify_sub")
+            )
+            bot.send_message(message.chat.id, "⚠️ <b>Channel Join Karein Pehle!</b>", reply_markup=m, parse_mode="HTML")
+    except Exception as e:
+        print(f"Start Error: {e}")
 
-# 🟢 ADMIN STATS COMMAND
+# 🟢 2. STATS COMMAND
 @bot.message_handler(commands=['stats'])
 def admin_stats(message):
     if message.from_user.id != ADMIN_ID: return
@@ -119,13 +136,9 @@ def admin_stats(message):
     total_users = users_col.count_documents({})
     total_bal = sum([u.get("balance", 0) for u in wallet_col.find()])
     
-    txt = (
-        f"📊 <b>ADMIN DASHBOARD (STATS)</b> 📊\n\n"
-        f"👥 <b>Total Bot Users:</b> {total_users}\n"
-        f"💰 <b>Total Money in User Wallets:</b> ₹{total_bal}\n\n"
-        f"🚀 <i>V-Premium Store is growing!</i>"
-    )
+    txt = f"📊 <b>ADMIN DASHBOARD (STATS)</b> 📊\n\n👥 <b>Total Bot Users:</b> {total_users}\n💰 <b>Total Money in Wallets:</b> ₹{total_bal}"
     bot.send_message(message.chat.id, txt, parse_mode="HTML")
+    
 
 # 🟢 BROADCAST COMMAND (Fully Working)
 @bot.message_handler(commands=['broadcast'])
