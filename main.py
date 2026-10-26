@@ -250,9 +250,48 @@ def handle_query(call):
     elif call.data == "menu_netflix":
         m = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("📱 Mobile - ₹120", callback_data="buy_netflix_mob"), InlineKeyboardButton("🔙 Back", callback_data="open_products"))
         bot.edit_message_text("🎬 <b>NETFLIX PREMIUM</b>", cid, mid, reply_markup=m, parse_mode="HTML")
+        
     elif call.data == "menu_prime":
-        m = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("📦 1 Month - ₹70", callback_data="buy_prime1_yes"), InlineKeyboardButton("🔙 Back", callback_data="open_products"))
-        bot.edit_message_text("📦 <b>AMAZON PRIME</b>", cid, mid, reply_markup=m, parse_mode="HTML")
+        # row_width=1 se saare buttons ek ke niche ek aayenge
+        m = InlineKeyboardMarkup(row_width=1)
+        
+        # Har button ko alag se add karna hai taaki koi miss na ho
+        m.add(InlineKeyboardButton("📦 1 Month Plan - ₹70", callback_data="prime_dur_1"))
+        m.add(InlineKeyboardButton("📦 6 Months Plan - ₹250", callback_data="prime_dur_6"))
+        m.add(InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
+        
+        txt = '📦 <b>AMAZON PRIME VIDEO</b>\n\n👇 <b>Apna Plan Duration Select Karein:</b>'
+        bot.edit_message_text(txt, cid, mid, reply_markup=m, parse_mode="HTML")
+
+        elif call.data == "menu_spotify":
+        m = InlineKeyboardMarkup(row_width=1)
+        m.add(InlineKeyboardButton("📧 On Your Mail ✅ - ₹60", callback_data="buy_spotify_yes"))
+        m.add(InlineKeyboardButton("📧 On Your Mail ❌ - ₹60", callback_data="buy_spotify_no"))
+        m.add(InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
+        bot.edit_message_text("🎵 <b>SPOTIFY PREMIUM (3M)</b>\n\n👇 Apna Option Select Karein:", cid, mid, reply_markup=m, parse_mode="HTML")
+
+    elif call.data == "menu_tgprem":
+        m = InlineKeyboardMarkup(row_width=1)
+        m.add(InlineKeyboardButton("💎 6 Months Plan - ₹1200", callback_data="buy_tgprem_6m"))
+        m.add(InlineKeyboardButton("💎 1 Year Plan - ₹1700", callback_data="buy_tgprem_1y"))
+        m.add(InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
+        bot.edit_message_text("💎 <b>TELEGRAM PREMIUM (GIFT)</b>\n\n👇 Apna Plan Duration Select Karein:", cid, mid, reply_markup=m, parse_mode="HTML")
+
+    elif call.data == "menu_hotstar":
+        m = InlineKeyboardMarkup(row_width=1)
+        m.add(InlineKeyboardButton("📧 On Your Mail ✅ - ₹50", callback_data="buy_hotstar_yes"))
+        m.add(InlineKeyboardButton("📧 On Your Mail ❌ - ₹50", callback_data="buy_hotstar_no"))
+        m.add(InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
+        bot.edit_message_text("🌐 <b>JIOHOTSTAR PREMIUM (1M)</b>\n\n👇 Apna Option Select Karein:", cid, mid, reply_markup=m, parse_mode="HTML")
+
+    elif call.data == "menu_crunchyroll":
+        m = InlineKeyboardMarkup(row_width=1)
+        m.add(InlineKeyboardButton("📧 On Your Mail ✅ - ₹50", callback_data="buy_crunchy_yes"))
+        m.add(InlineKeyboardButton("📧 On Your Mail ❌ - ₹50", callback_data="buy_crunchy_no"))
+        m.add(InlineKeyboardButton("🔙 Back to Products", callback_data="open_products"))
+        bot.edit_message_text("🍥 <b>CRUNCHYROLL (1M)</b>\n\n👇 Apna Option Select Karein:", cid, mid, reply_markup=m, parse_mode="HTML")
+
+    
     
     # Order Confirmation
     elif call.data.startswith("buy_"):
