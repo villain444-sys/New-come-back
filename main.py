@@ -66,12 +66,21 @@ def get_balance(user_id):
     return user.get("balance", 0) if user else 0
 
 def update_balance(user_id, amount):
-    wallet_col.update_one({"_id": user_id}, {"$inc": {"balance": amount}}, upsert=True)
+    try:
+        amount = int(amount)  # Ensure input is an integer
+    except ValueError:
+        return 0
+
+    wallet_col.update_one(
+        {"_id": user_id},
+        {"$inc": {"balance": amount}},
+        upsert=True
+    )
     user = wallet_col.find_one({"_id": user_id})
-    if user["balance"] < 0:
+    if user and user.get("balance", 0) < 0:
         wallet_col.update_one({"_id": user_id}, {"$set": {"balance": 0}})
         return 0
-    return user["balance"]
+    return user.get("balance", 0) if user else 0
 
 def check_sub(user_id):
     try:
@@ -187,17 +196,35 @@ def send_welcome(message):
         )
         bot.send_message(message.chat.id, "⚠️ <b>Channel Join Karein Pehle!</b>", reply_markup=m, parse_mode="HTML")
 
+# 🟢 ADD BALANCE COMMAND (ADMIN ONLY)
 @bot.message_handler(commands=['addbal'])
 def admin_add_balance(message):
-    if message.from_user.id != ADMIN_ID: return
+    if message.from_user.id != ADMIN_ID:
+        return
+
     try:
         args = message.text.split()
-        target, amt = int(args[1]), int(args[2])
+        if len(args) < 3:
+            bot.send_message(message.chat.id, "⚠️ <b>Format:</b> <code>/addbal <user_id> <amount></code>", parse_mode="HTML")
+            return
+
+        target = int(args[1])
+        amt = int(args[2])
+
+        # Update balance safely
         new_bal = update_balance(target, amt)
-        bot.send_message(message.chat.id, f"✅ Added ₹{amt} to `{target}`. New Bal: ₹{new_bal}")
-        bot.send_message(target, f"🎉 Admin ne wallet mein ₹{amt} add kiye! Current Bal: ₹{new_bal}")
-    except:
-        bot.send_message(message.chat.id, "⚠️ Format: /addbal <user_id> <amount>")
+
+        # Confirm to admin only
+        bot.send_message(
+            message.chat.id, 
+            f"✅ <b>Added ₹{amt} to</b> <code>{target}</code>\n💰 <b>New Balance:</b> ₹{new_bal}", 
+            parse_mode="HTML"
+        )
+
+    except ValueError:
+        bot.send_message(message.chat.id, "❌ <b>Error:</b> User ID aur Amount numbers hone chahiye!", parse_mode="HTML")
+    except Exception as e:
+        bot.send_message(message.chat.id, f"⚠️ <b>Error:</b> {str(e)}", parse_mode="HTML")
 
 @bot.message_handler(commands=['broadcast'])
 def broadcast_message(message):
