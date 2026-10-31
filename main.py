@@ -55,7 +55,7 @@ PLAN_DATA = {
     "buy_gemini": ("Gemini Advanced (18 Months)", 80),
     "buy_chatgpt": ("ChatGPT GO (1 Month)", 150),
     "buy_tgprem_6m": ("Telegram Premium (6 Months)", 1200),
-    "buy_tgprem_1y": ("Telegram Premium (1 Year)", 1700)
+    "buy_tgprem_1y": ("Telegram Premium (1 Year)", 1700),
     "buy_zee5": ("ZEE5 Premium (1 Month)", 60),
     "buy_sonyliv": ("SonyLIV Premium (1 Month)", 70),
 }
