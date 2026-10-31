@@ -56,6 +56,8 @@ PLAN_DATA = {
     "buy_chatgpt": ("ChatGPT GO (1 Month)", 150),
     "buy_tgprem_6m": ("Telegram Premium (6 Months)", 1200),
     "buy_tgprem_1y": ("Telegram Premium (1 Year)", 1700)
+    "buy_zee5": ("ZEE5 Premium (1 Month)", 60),
+    "buy_sonyliv": ("SonyLIV Premium (1 Month)", 70),
 }
 
 def save_user(user_id):
@@ -116,7 +118,8 @@ def products_menu():
     m.add(InlineKeyboardButton("🧠 ChatGPT GO - ₹150", callback_data="buy_chatgpt"))
     m.add(InlineKeyboardButton("💎 Telegram Premium (Gift)", callback_data="menu_tgprem"))
     m.add(InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
-    
+    m.add(InlineKeyboardButton("📺 ZEE5 (1M) - ₹60", callback_data="buy_zee5"))
+    m.add(InlineKeyboardButton("🏆 SonyLIV (1M) - ₹70", callback_data="buy_sonyliv"))
     return m
     
 
