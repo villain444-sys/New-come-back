@@ -96,7 +96,7 @@ def main_home_menu():
     m = InlineKeyboardMarkup(row_width=1)
     m.add(
         InlineKeyboardButton("🛍️ Explore Products & Plans 🛍️", callback_data="open_products"),
-        InlineKeyboardButton("💳 My Wallet System 💰", callback_data="my_wallet")
+        InlineKeyboardButton("💳 My Wallet", callback_data="my_wallet")
     )
     m.row(
         InlineKeyboardButton("💬 Support 🛠️", url=f"https://t.me/{ADMIN_USERNAME}"),
