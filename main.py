@@ -117,9 +117,9 @@ def products_menu():
     m.add(InlineKeyboardButton("🤖 Gemini (18M) - ₹80", callback_data="buy_gemini"))
     m.add(InlineKeyboardButton("🧠 ChatGPT GO - ₹150", callback_data="buy_chatgpt"))
     m.add(InlineKeyboardButton("💎 Telegram Premium (Gift)", callback_data="menu_tgprem"))
-    m.add(InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
     m.add(InlineKeyboardButton("📺 ZEE5 (1M) - ₹60", callback_data="buy_zee5"))
     m.add(InlineKeyboardButton("🏆 SonyLIV (1M) - ₹70", callback_data="buy_sonyliv"))
+    m.add(InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main"))
     return m
     
 
